@@ -103,16 +103,16 @@ redis-keeper全部的可配置项完全兼容Spring Data Redis和Redisson的配�
 
 ```yaml
 redis-keeper:
-    redis:
-        datasource:
-	    #.....
-	datasources:
-	    #.....
-    redisson:
-        datasource:
-	    #.....
-	datasources:
-	    #.....
+  redis:
+    datasource:
+    #.....
+    datasources:
+    #.....
+  redisson:
+    datasource:
+    #.....
+    datasources:
+    #.....
 ```
 
 
