@@ -1,0 +1,3 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  org.codeba.redis.keeper.spring.ApplicationContextUtil,\
+  org.codeba.redis.keeper.spring.boot.RedisKeeperAutoConfiguration

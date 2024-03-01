@@ -1,0 +1,67 @@
+
+spring:
+  config:
+    import:
+      - optional:nacos:redis-keeper-demo.yaml
+
+  cloud:
+    nacos:
+      server-addr: ${NACOS_URL:localhost:8848}
+      username: ${NACOS_USERNAME:}
+      password: ${NACOS_PASSWORD:}
+
+
+###### redis-keeper-demo.yaml ######
+
+#server:
+#  port: 8000
+#
+#redis-keeper:
+#  redis:
+#    datasource:
+#      ds1:
+#        host: yourAddress
+#        port: 6379
+#        password: yourPass
+#        invoke-params-print: true
+#
+#    datasources:
+#      ds2:
+#        - host: yourAddress
+#          port: 6379
+#          database: 1
+#          password: yourPass
+#          invoke-params-print: true
+#
+#        - host: yourAddress
+#          port: 6379
+#          database: 2
+#          password: yourPass
+#          invoke-params-print: true
+#
+#        - host: yourAddress
+#          port: 6379
+#          database: 3
+#          password: yourPass
+#          invoke-params-print: true
+#
+#      ds3:
+#        - host: yourAddress
+#          port: 6379
+#          database: 1
+#          password: yourPass
+#          invoke-params-print: true
+#          status: RO
+#
+#        - host: yourAddress
+#          port: 6379
+#          database: 2
+#          password: yourPass
+#          invoke-params-print: true
+#
+#        - host: yourAddress
+#          port: 6379
+#          database: 3
+#          password: yourPass
+#          invoke-params-print: true
+#          status: RO
