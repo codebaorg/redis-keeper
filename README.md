@@ -95,3 +95,9 @@ Optional<CacheTemplate> randomedTemplate = provider.randomTemplate("ds2");
 1. [Redis-Keeper only](https://github.com/codebaorg/redis-keeper/tree/main/redis-keeper-example/redis-keeper-example-standalone)
 2. [Redis-Keeper with Spring boot](https://github.com/codebaorg/redis-keeper/tree/main/redis-keeper-example/redis-keeper-example-springboot)
 3. [Redis-Keeper with Spring cloud](https://github.com/codebaorg/redis-keeper/tree/main/redis-keeper-example/redis-keeper-example-springcloud)
+
+
+## Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=codebaorg/redis-keeper&type=Date)](https://star-history.com/#codebaorg/redis-keeper&Date)
+
