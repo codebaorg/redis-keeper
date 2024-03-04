@@ -25,13 +25,13 @@
     <dependency>
        <groupId>org.codeba</groupId>
        <artifactId>redis-keeper-core</artifactId>
-       <version>2024.0.0<</version>
+       <version>2024.0.0</version>
     </dependency> 
 
     <dependency>
        <groupId>org.codeba</groupId>
        <artifactId>redis-keeper-support</artifactId>
-       <version>2024.0.0<</version>
+       <version>2024.0.0</version>
     </dependency> 
 
 #### Gradle
