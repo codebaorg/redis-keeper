@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -42,6 +43,14 @@ public interface CacheTemplate {
     long bitCount(String key);
 
     /**
+     * Bit count async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> bitCountAsync(String key);
+
+    /**
      * Bit field set signed long.
      *
      * @param key    the key
@@ -51,6 +60,17 @@ public interface CacheTemplate {
      * @return the long
      */
     long bitFieldSetSigned(String key, int size, long offset, long value);
+
+    /**
+     * Bit field set signed async completable future.
+     *
+     * @param key    the key
+     * @param size   the size
+     * @param offset the offset
+     * @param value  the value
+     * @return the completable future
+     */
+    CompletableFuture<Long> bitFieldSetSignedAsync(String key, int size, long offset, long value);
 
     /**
      * Bit field set un signed long.
@@ -64,6 +84,17 @@ public interface CacheTemplate {
     long bitFieldSetUnSigned(String key, int size, long offset, long value);
 
     /**
+     * Bit field set un signed async completable future.
+     *
+     * @param key    the key
+     * @param size   the size
+     * @param offset the offset
+     * @param value  the value
+     * @return the completable future
+     */
+    CompletableFuture<Long> bitFieldSetUnSignedAsync(String key, int size, long offset, long value);
+
+    /**
      * Bit field get signed long.
      *
      * @param key    the key
@@ -72,6 +103,16 @@ public interface CacheTemplate {
      * @return the long
      */
     long bitFieldGetSigned(String key, int size, long offset);
+
+    /**
+     * Bit field get signed async completable future.
+     *
+     * @param key    the key
+     * @param size   the size
+     * @param offset the offset
+     * @return the completable future
+     */
+    CompletableFuture<Long> bitFieldGetSignedAsync(String key, int size, long offset);
 
     /**
      * Bit field get un signed long.
@@ -84,12 +125,32 @@ public interface CacheTemplate {
     long bitFieldGetUnSigned(String key, int size, long offset);
 
     /**
+     * Bit field get un signed async completable future.
+     *
+     * @param key    the key
+     * @param size   the size
+     * @param offset the offset
+     * @return the completable future
+     */
+    CompletableFuture<Long> bitFieldGetUnSignedAsync(String key, int size, long offset);
+
+    /**
      * Bit op or.
      *
      * @param destKey the dest key
      * @param keys    the keys
      */
     void bitOpOr(String destKey, String... keys);
+
+
+    /**
+     * Bit op or async completable future.
+     *
+     * @param destKey the dest key
+     * @param keys    the keys
+     * @return the completable future
+     */
+    CompletableFuture<Void> bitOpOrAsync(String destKey, String... keys);
 
     /**
      * Gets bit.
@@ -101,6 +162,15 @@ public interface CacheTemplate {
     boolean getBit(String key, long bitIndex);
 
     /**
+     * Gets bit async.
+     *
+     * @param key      the key
+     * @param bitIndex the bit index
+     * @return the bit async
+     */
+    CompletableFuture<Boolean> getBitAsync(String key, long bitIndex);
+
+    /**
      * Sets bit.
      *
      * @param key    the key
@@ -109,6 +179,16 @@ public interface CacheTemplate {
      * @return the bit
      */
     boolean setBit(String key, long offset, boolean value);
+
+    /**
+     * Sets bit async.
+     *
+     * @param key    the key
+     * @param offset the offset
+     * @param value  the value
+     * @return the bit async
+     */
+    CompletableFuture<Boolean> setBitAsync(String key, long offset, boolean value);
 
     /**
      * Geo add long.
@@ -122,6 +202,17 @@ public interface CacheTemplate {
     long geoAdd(String key, double longitude, double latitude, Object member);
 
     /**
+     * Geo add async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param member    the member
+     * @return the completable future
+     */
+    CompletableFuture<Long> geoAddAsync(String key, double longitude, double latitude, Object member);
+
+    /**
      * Geo add xx boolean.
      *
      * @param key       the key
@@ -131,6 +222,17 @@ public interface CacheTemplate {
      * @return the boolean
      */
     boolean geoAddXX(String key, double longitude, double latitude, Object member);
+
+    /**
+     * Geo add xx async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param member    the member
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> geoAddXXAsync(String key, double longitude, double latitude, Object member);
 
     /**
      * Geo dist double.
@@ -144,6 +246,17 @@ public interface CacheTemplate {
     Double geoDist(String key, Object firstMember, Object secondMember, String geoUnit);
 
     /**
+     * Geo dist async completable future.
+     *
+     * @param key          the key
+     * @param firstMember  the first member
+     * @param secondMember the second member
+     * @param geoUnit      the geo unit
+     * @return the completable future
+     */
+    CompletableFuture<Double> geoDistAsync(String key, Object firstMember, Object secondMember, String geoUnit);
+
+    /**
      * Geo hash map.
      *
      * @param key     the key
@@ -153,6 +266,15 @@ public interface CacheTemplate {
     Map<Object, String> geoHash(String key, Object... members);
 
     /**
+     * Geo hash async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, String>> geoHashAsync(String key, Object... members);
+
+    /**
      * Geo pos map.
      *
      * @param key     the key
@@ -160,6 +282,15 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, double[]> geoPos(String key, Object... members);
+
+    /**
+     * Geo pos async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, double[]>> geoPosAsync(String key, Object... members);
 
     /**
      * Geo radius map.
@@ -174,6 +305,18 @@ public interface CacheTemplate {
     Map<Object, Double> geoRadius(String key, double longitude, double latitude, double radius, String geoUnit);
 
     /**
+     * Geo radius async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param radius    the radius
+     * @param geoUnit   the geo unit
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoRadiusAsync(String key, double longitude, double latitude, double radius, String geoUnit);
+
+    /**
      * Geo search list.
      *
      * @param key       the key
@@ -185,6 +328,19 @@ public interface CacheTemplate {
      * @return the list
      */
     List<Object> geoSearch(String key, double longitude, double latitude, double radius, String geoUnit, String order);
+
+    /**
+     * Geo search async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param radius    the radius
+     * @param geoUnit   the geo unit
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double radius, String geoUnit, String order);
 
     /**
      * Geo search list.
@@ -201,6 +357,20 @@ public interface CacheTemplate {
     List<Object> geoSearch(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order);
 
     /**
+     * Geo search async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param radius    the radius
+     * @param geoUnit   the geo unit
+     * @param count     the count
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order);
+
+    /**
      * Geo search list.
      *
      * @param key       the key
@@ -213,6 +383,20 @@ public interface CacheTemplate {
      * @return the list
      */
     List<Object> geoSearch(String key, double longitude, double latitude, double width, double height, String geoUnit, String order);
+
+    /**
+     * Geo search async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param width     the width
+     * @param height    the height
+     * @param geoUnit   the geo unit
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, String order);
 
     /**
      * Geo search list.
@@ -230,6 +414,21 @@ public interface CacheTemplate {
     List<Object> geoSearch(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order);
 
     /**
+     * Geos search async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param width     the width
+     * @param height    the height
+     * @param geoUnit   the geo unit
+     * @param count     the count
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geosSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order);
+
+    /**
      * Geo search list.
      *
      * @param key     the key
@@ -240,6 +439,18 @@ public interface CacheTemplate {
      * @return the list
      */
     List<Object> geoSearch(String key, Object member, double radius, String geoUnit, String order);
+
+    /**
+     * Geo search async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param radius  the radius
+     * @param geoUnit the geo unit
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double radius, String geoUnit, String order);
 
     /**
      * Geo search list.
@@ -255,6 +466,19 @@ public interface CacheTemplate {
     List<Object> geoSearch(String key, Object member, double radius, String geoUnit, int count, String order);
 
     /**
+     * Geo search async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param radius  the radius
+     * @param geoUnit the geo unit
+     * @param count   the count
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double radius, String geoUnit, int count, String order);
+
+    /**
      * Geo search list.
      *
      * @param key     the key
@@ -266,6 +490,19 @@ public interface CacheTemplate {
      * @return the list
      */
     List<Object> geoSearch(String key, Object member, double width, double height, String geoUnit, String order);
+
+    /**
+     * Geo search async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param width   the width
+     * @param height  the height
+     * @param geoUnit the geo unit
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, String order);
 
     /**
      * Geo search list.
@@ -282,6 +519,20 @@ public interface CacheTemplate {
     List<Object> geoSearch(String key, Object member, double width, double height, String geoUnit, int count, String order);
 
     /**
+     * Geos search async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param width   the width
+     * @param height  the height
+     * @param geoUnit the geo unit
+     * @param count   the count
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> geosSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order);
+
+    /**
      * Geo search with distance map.
      *
      * @param key       the key
@@ -293,6 +544,19 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double radius, String geoUnit, String order);
+
+    /**
+     * Geo search with distance async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param radius    the radius
+     * @param geoUnit   the geo unit
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, String order);
 
     /**
      * Geo search with distance map.
@@ -309,6 +573,20 @@ public interface CacheTemplate {
     Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order);
 
     /**
+     * Geos search with distance async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param radius    the radius
+     * @param geoUnit   the geo unit
+     * @param count     the count
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geosSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order);
+
+    /**
      * Geo search with distance map.
      *
      * @param key       the key
@@ -321,6 +599,20 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double width, double height, String geoUnit, String order);
+
+    /**
+     * Geo search with distance async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param width     the width
+     * @param height    the height
+     * @param geoUnit   the geo unit
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, String order);
 
     /**
      * Geo search with distance map.
@@ -338,6 +630,21 @@ public interface CacheTemplate {
     Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order);
 
     /**
+     * Geo search with distance async completable future.
+     *
+     * @param key       the key
+     * @param longitude the longitude
+     * @param latitude  the latitude
+     * @param width     the width
+     * @param height    the height
+     * @param geoUnit   the geo unit
+     * @param count     the count
+     * @param order     the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order);
+
+    /**
      * Geo search with distance map.
      *
      * @param key     the key
@@ -348,6 +655,18 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, Double> geoSearchWithDistance(String key, Object member, double radius, String geoUnit, String order);
+
+    /**
+     * Geo search with distance async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param radius  the radius
+     * @param geoUnit the geo unit
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double radius, String geoUnit, String order);
 
     /**
      * Geo search with distance map.
@@ -363,6 +682,19 @@ public interface CacheTemplate {
     Map<Object, Double> geoSearchWithDistance(String key, Object member, double radius, String geoUnit, int count, String order);
 
     /**
+     * Geo search with distance async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param radius  the radius
+     * @param geoUnit the geo unit
+     * @param count   the count
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double radius, String geoUnit, int count, String order);
+
+    /**
      * Geo search with distance map.
      *
      * @param key     the key
@@ -374,6 +706,19 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, Double> geoSearchWithDistance(String key, Object member, double width, double height, String geoUnit, String order);
+
+    /**
+     * Geo search with distance async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param width   the width
+     * @param height  the height
+     * @param geoUnit the geo unit
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double width, double height, String geoUnit, String order);
 
     /**
      * Geo search with distance map.
@@ -390,6 +735,20 @@ public interface CacheTemplate {
     Map<Object, Double> geoSearchWithDistance(String key, Object member, double width, double height, String geoUnit, int count, String order);
 
     /**
+     * Geo search with distance async completable future.
+     *
+     * @param key     the key
+     * @param member  the member
+     * @param width   the width
+     * @param height  the height
+     * @param geoUnit the geo unit
+     * @param count   the count
+     * @param order   the order
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double width, double height, String geoUnit, int count, String order);
+
+    /**
      * H del map.
      *
      * @param key    the key
@@ -403,8 +762,9 @@ public interface CacheTemplate {
      *
      * @param key    the key
      * @param fields the fields
+     * @return the completable future
      */
-    void hDelAsync(String key, String... fields);
+    CompletableFuture<Long> hDelAsync(String key, String... fields);
 
     /**
      * H exists map.
@@ -425,12 +785,29 @@ public interface CacheTemplate {
     Optional<Object> hGet(String key, String field);
 
     /**
+     * H get async completable future.
+     *
+     * @param key   the key
+     * @param field the field
+     * @return the completable future
+     */
+    CompletableFuture<Object> hGetAsync(String key, String field);
+
+    /**
      * H get all map.
      *
      * @param key the key
      * @return the map
      */
     Map<Object, Object> hGetAll(String key);
+
+    /**
+     * H get all async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Object>> hGetAllAsync(String key);
 
     /**
      * H incr by object.
@@ -448,8 +825,9 @@ public interface CacheTemplate {
      * @param key   the key
      * @param field the field
      * @param value the value
+     * @return the completable future
      */
-    void hIncrByAsync(String key, String field, Number value);
+    CompletableFuture<Object> hIncrByAsync(String key, String field, Number value);
 
     /**
      * H keys collection.
@@ -460,12 +838,28 @@ public interface CacheTemplate {
     Collection<Object> hKeys(String key);
 
     /**
+     * H keys async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> hKeysAsync(String key);
+
+    /**
      * H len int.
      *
      * @param key the key
      * @return the int
      */
     int hLen(String key);
+
+    /**
+     * H len async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Integer> hLenAsync(String key);
 
     /**
      * Hm get map.
@@ -475,6 +869,15 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, Object> hmGet(String key, Set<Object> fields);
+
+    /**
+     * Hm get async completable future.
+     *
+     * @param key    the key
+     * @param fields the fields
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Object>> hmGetAsync(String key, Set<Object> fields);
 
     /**
      * Hm set.
@@ -489,8 +892,9 @@ public interface CacheTemplate {
      *
      * @param key   the key
      * @param kvMap the kv map
+     * @return the completable future
      */
-    void hmSetAsync(String key, Map<?, ?> kvMap);
+    CompletableFuture<Void> hmSetAsync(String key, Map<?, ?> kvMap);
 
     /**
      * H set.
@@ -507,8 +911,9 @@ public interface CacheTemplate {
      * @param key   the key
      * @param field the field
      * @param value the value
+     * @return the completable future
      */
-    void hSetAsync(String key, String field, Object value);
+    CompletableFuture<Boolean> hSetAsync(String key, String field, Object value);
 
     /**
      * H rand field set.
@@ -520,6 +925,15 @@ public interface CacheTemplate {
     Set<Object> hRandField(String key, int count);
 
     /**
+     * H rand fields async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> hRandFieldsAsync(String key, int count);
+
+    /**
      * H rand field with values map.
      *
      * @param key   the key
@@ -527,6 +941,15 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<Object, Object> hRandFieldWithValues(String key, int count);
+
+    /**
+     * H rand field with values async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Map<Object, Object>> hRandFieldWithValuesAsync(String key, int count);
 
     /**
      * H scan iterator.
@@ -562,8 +985,9 @@ public interface CacheTemplate {
      * @param key   the key
      * @param field the field
      * @param value the value
+     * @return the completable future
      */
-    void hSetNXAsync(String key, String field, Object value);
+    CompletableFuture<Boolean> hSetNXAsync(String key, String field, Object value);
 
     /**
      * H str len int.
@@ -575,12 +999,29 @@ public interface CacheTemplate {
     int hStrLen(String key, String field);
 
     /**
+     * H str len async completable future.
+     *
+     * @param key   the key
+     * @param field the field
+     * @return the completable future
+     */
+    CompletableFuture<Integer> hStrLenAsync(String key, String field);
+
+    /**
      * H va ls collection.
      *
      * @param key the key
      * @return the collection
      */
     Collection<Object> hVALs(String key);
+
+    /**
+     * H va ls async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> hVALsAsync(String key);
 
     /**
      * Pf add boolean.
@@ -592,12 +1033,29 @@ public interface CacheTemplate {
     boolean pfAdd(String key, Collection<Object> elements);
 
     /**
+     * Pf add async completable future.
+     *
+     * @param key      the key
+     * @param elements the elements
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> pfAddAsync(String key, Collection<Object> elements);
+
+    /**
      * Pf count long.
      *
      * @param key the key
      * @return the long
      */
     long pfCount(String key);
+
+    /**
+     * Pf count async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> pfCountAsync(String key);
 
     /**
      * Pf count long.
@@ -609,12 +1067,30 @@ public interface CacheTemplate {
     long pfCount(String key, String... otherKeys);
 
     /**
+     * Pf count async completable future.
+     *
+     * @param key       the key
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Long> pfCountAsync(String key, String... otherKeys);
+
+    /**
      * Pf merge.
      *
      * @param destKey    the dest key
      * @param sourceKeys the source keys
      */
     void pfMerge(String destKey, String... sourceKeys);
+
+    /**
+     * Pf merge async completable future.
+     *
+     * @param destKey    the dest key
+     * @param sourceKeys the source keys
+     * @return the completable future
+     */
+    CompletableFuture<Void> pfMergeAsync(String destKey, String... sourceKeys);
 
     /**
      * Bl move optional.
@@ -628,12 +1104,31 @@ public interface CacheTemplate {
     Optional<Object> blMove(String source, String destination, Duration timeout, boolean pollLeft);
 
     /**
+     * Bl move async completable future.
+     *
+     * @param source      the source
+     * @param destination the destination
+     * @param timeout     the timeout
+     * @param pollLeft    the poll left
+     * @return the completable future
+     */
+    CompletableFuture<Object> blMoveAsync(String source, String destination, Duration timeout, boolean pollLeft);
+
+    /**
      * Bl pop optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> blPop(String key);
+
+    /**
+     * Bl pop async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> blPopAsync(String key);
 
     /**
      * Bl pop list.
@@ -645,6 +1140,15 @@ public interface CacheTemplate {
     List<Object> blPop(String key, int count);
 
     /**
+     * Bl pop async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> blPopAsync(String key, int count);
+
+    /**
      * Bl pop optional.
      *
      * @param key     the key
@@ -654,6 +1158,17 @@ public interface CacheTemplate {
      * @throws InterruptedException the interrupted exception
      */
     Optional<Object> blPop(String key, long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * Bl pop async completable future.
+     *
+     * @param key     the key
+     * @param timeout the timeout
+     * @param unit    the unit
+     * @return the completable future
+     * @throws InterruptedException the interrupted exception
+     */
+    CompletableFuture<Object> blPopAsync(String key, long timeout, TimeUnit unit) throws InterruptedException;
 
     /**
      * Bl pop optional.
@@ -668,12 +1183,31 @@ public interface CacheTemplate {
     Optional<Object> blPop(String key, long timeout, TimeUnit unit, String... otherKeys) throws InterruptedException;
 
     /**
+     * Bl pop async completable future.
+     *
+     * @param key       the key
+     * @param timeout   the timeout
+     * @param unit      the unit
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Object> blPopAsync(String key, long timeout, TimeUnit unit, String... otherKeys);
+
+    /**
      * Br pop optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> brPop(String key);
+
+    /**
+     * Br pop async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> brPopAsync(String key);
 
     /**
      * Br pop list.
@@ -685,6 +1219,15 @@ public interface CacheTemplate {
     List<Object> brPop(String key, int count);
 
     /**
+     * Br pop async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> brPopAsync(String key, int count);
+
+    /**
      * Br pop optional.
      *
      * @param key     the key
@@ -694,6 +1237,17 @@ public interface CacheTemplate {
      * @throws InterruptedException the interrupted exception
      */
     Optional<Object> brPop(String key, long timeout, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * Br pop async completable future.
+     *
+     * @param key     the key
+     * @param timeout the timeout
+     * @param unit    the unit
+     * @return the completable future
+     * @throws InterruptedException the interrupted exception
+     */
+    CompletableFuture<Object> brPopAsync(String key, long timeout, TimeUnit unit) throws InterruptedException;
 
     /**
      * Br pop optional.
@@ -708,6 +1262,17 @@ public interface CacheTemplate {
     Optional<Object> brPop(String key, long timeout, TimeUnit unit, String... otherKeys) throws InterruptedException;
 
     /**
+     * Br pop async completable future.
+     *
+     * @param key       the key
+     * @param timeout   the timeout
+     * @param unit      the unit
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Object> brPopAsync(String key, long timeout, TimeUnit unit, String... otherKeys);
+
+    /**
      * Br popl push optional.
      *
      * @param source      the source
@@ -720,6 +1285,17 @@ public interface CacheTemplate {
     Optional<Object> brPoplPush(String source, String destination, long timeout, TimeUnit unit) throws InterruptedException;
 
     /**
+     * Br popl push async completable future.
+     *
+     * @param source      the source
+     * @param destination the destination
+     * @param timeout     the timeout
+     * @param unit        the unit
+     * @return the completable future
+     */
+    CompletableFuture<Object> brPoplPushAsync(String source, String destination, long timeout, TimeUnit unit);
+
+    /**
      * L index optional.
      *
      * @param key   the key
@@ -727,6 +1303,16 @@ public interface CacheTemplate {
      * @return the optional
      */
     Optional<Object> lIndex(String key, int index);
+
+
+    /**
+     * L index async completable future.
+     *
+     * @param key   the key
+     * @param index the index
+     * @return the completable future
+     */
+    CompletableFuture<Object> lIndexAsync(String key, int index);
 
     /**
      * L insert int.
@@ -740,12 +1326,31 @@ public interface CacheTemplate {
     int lInsert(String key, boolean before, Object pivot, Object element);
 
     /**
+     * L insert async completable future.
+     *
+     * @param key     the key
+     * @param before  the before
+     * @param pivot   the pivot
+     * @param element the element
+     * @return the completable future
+     */
+    CompletableFuture<Integer> lInsertAsync(String key, boolean before, Object pivot, Object element);
+
+    /**
      * Llen int.
      *
      * @param key the key
      * @return the int
      */
     int llen(String key);
+
+    /**
+     * Llen async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Integer> llenAsync(String key);
 
     /**
      * L move optional.
@@ -758,6 +1363,16 @@ public interface CacheTemplate {
     Optional<Object> lMove(String source, String destination, boolean pollLeft);
 
     /**
+     * L move async completable future.
+     *
+     * @param source      the source
+     * @param destination the destination
+     * @param pollLeft    the poll left
+     * @return the completable future
+     */
+    CompletableFuture<Object> lMoveAsync(String source, String destination, boolean pollLeft);
+
+    /**
      * L pop list.
      *
      * @param key   the key
@@ -765,6 +1380,15 @@ public interface CacheTemplate {
      * @return the list
      */
     List<Object> lPop(String key, int count);
+
+    /**
+     * L pop async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> lPopAsync(String key, int count);
 
     /**
      * L push int.
@@ -776,6 +1400,15 @@ public interface CacheTemplate {
     int lPush(String key, Object... elements);
 
     /**
+     * L push async completable future.
+     *
+     * @param key      the key
+     * @param elements the elements
+     * @return the completable future
+     */
+    CompletableFuture<Void> lPushAsync(String key, Object... elements);
+
+    /**
      * L push x int.
      *
      * @param key      the key
@@ -783,6 +1416,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int lPushX(String key, Object... elements);
+
+    /**
+     * L push x async completable future.
+     *
+     * @param key      the key
+     * @param elements the elements
+     * @return the completable future
+     */
+    CompletableFuture<Integer> lPushXAsync(String key, Object... elements);
 
     /**
      * L range list.
@@ -795,6 +1437,16 @@ public interface CacheTemplate {
     List<Object> lRange(String key, int fromIndex, int toIndex);
 
     /**
+     * L range async completable future.
+     *
+     * @param key       the key
+     * @param fromIndex the from index
+     * @param toIndex   the to index
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> lRangeAsync(String key, int fromIndex, int toIndex);
+
+    /**
      * L rem boolean.
      *
      * @param key     the key
@@ -802,6 +1454,15 @@ public interface CacheTemplate {
      * @return the boolean
      */
     boolean lRem(String key, Object element);
+
+    /**
+     * L rem async completable future.
+     *
+     * @param key     the key
+     * @param element the element
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> lRemAsync(String key, Object element);
 
     /**
      * L set.
@@ -813,6 +1474,16 @@ public interface CacheTemplate {
     void lSet(String key, int index, Object element);
 
     /**
+     * L set async completable future.
+     *
+     * @param key     the key
+     * @param index   the index
+     * @param element the element
+     * @return the completable future
+     */
+    CompletableFuture<Void> lSetAsync(String key, int index, Object element);
+
+    /**
      * L trim.
      *
      * @param key       the key
@@ -820,6 +1491,16 @@ public interface CacheTemplate {
      * @param toIndex   the to index
      */
     void lTrim(String key, int fromIndex, int toIndex);
+
+    /**
+     * L trim async completable future.
+     *
+     * @param key       the key
+     * @param fromIndex the from index
+     * @param toIndex   the to index
+     * @return the completable future
+     */
+    CompletableFuture<Void> lTrimAsync(String key, int fromIndex, int toIndex);
 
     /**
      * R pop list.
@@ -831,6 +1512,15 @@ public interface CacheTemplate {
     List<Object> rPop(String key, int count);
 
     /**
+     * R pop async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<List<Object>> rPopAsync(String key, int count);
+
+    /**
      * R popl push optional.
      *
      * @param source      the source
@@ -838,6 +1528,15 @@ public interface CacheTemplate {
      * @return the optional
      */
     Optional<Object> rPoplPush(String source, String destination);
+
+    /**
+     * R popl push async completable future.
+     *
+     * @param source      the source
+     * @param destination the destination
+     * @return the completable future
+     */
+    CompletableFuture<Object> rPoplPushAsync(String source, String destination);
 
     /**
      * R push boolean.
@@ -849,6 +1548,15 @@ public interface CacheTemplate {
     boolean rPush(String key, Object... elements);
 
     /**
+     * R push async completable future.
+     *
+     * @param key      the key
+     * @param elements the elements
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> rPushAsync(String key, Object... elements);
+
+    /**
      * R push x int.
      *
      * @param key      the key
@@ -856,6 +1564,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int rPushX(String key, Object... elements);
+
+    /**
+     * R push x async completable future.
+     *
+     * @param key      the key
+     * @param elements the elements
+     * @return the completable future
+     */
+    CompletableFuture<Integer> rPushXAsync(String key, Object... elements);
 
     /**
      * S add boolean.
@@ -867,12 +1584,13 @@ public interface CacheTemplate {
     boolean sAdd(String key, Object member);
 
     /**
-     * S add async.
+     * S add async completable future.
      *
      * @param key    the key
      * @param member the member
+     * @return the completable future
      */
-    void sAddAsync(String key, Object member);
+    CompletableFuture<Boolean> sAddAsync(String key, Object member);
 
     /**
      * S add boolean.
@@ -888,8 +1606,9 @@ public interface CacheTemplate {
      *
      * @param key     the key
      * @param members the members
+     * @return the completable future
      */
-    void sAddAsync(String key, Collection<?> members);
+    CompletableFuture<Boolean> sAddAsync(String key, Collection<?> members);
 
     /**
      * S card int.
@@ -898,6 +1617,14 @@ public interface CacheTemplate {
      * @return the int
      */
     int sCard(String key);
+
+    /**
+     * S card async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Integer> sCardAsync(String key);
 
     /**
      * S diff set.
@@ -909,6 +1636,15 @@ public interface CacheTemplate {
     Set<Object> sDiff(String key, String... otherKeys);
 
     /**
+     * S diff async completable future.
+     *
+     * @param key       the key
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> sDiffAsync(String key, String... otherKeys);
+
+    /**
      * S diff store int.
      *
      * @param destination the destination
@@ -916,6 +1652,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int sDiffStore(String destination, String... keys);
+
+    /**
+     * S diff store async completable future.
+     *
+     * @param destination the destination
+     * @param keys        the keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> sDiffStoreAsync(String destination, String... keys);
 
     /**
      * S inter set.
@@ -927,6 +1672,15 @@ public interface CacheTemplate {
     Set<Object> sInter(String key, String... otherKeys);
 
     /**
+     * S inter async completable future.
+     *
+     * @param key       the key
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> sInterAsync(String key, String... otherKeys);
+
+    /**
      * S inter store int.
      *
      * @param destination the destination
@@ -934,6 +1688,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int sInterStore(String destination, String... keys);
+
+    /**
+     * S inter store async completable future.
+     *
+     * @param destination the destination
+     * @param keys        the keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> sInterStoreAsync(String destination, String... keys);
 
     /**
      * S is member boolean.
@@ -945,12 +1708,29 @@ public interface CacheTemplate {
     boolean sIsMember(String key, Object member);
 
     /**
+     * S is member async completable future.
+     *
+     * @param key    the key
+     * @param member the member
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> sIsMemberAsync(String key, Object member);
+
+    /**
      * S members set.
      *
      * @param key the key
      * @return the set
      */
     Set<Object> sMembers(String key);
+
+    /**
+     * S members async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> sMembersAsync(String key);
 
     /**
      * S move boolean.
@@ -963,12 +1743,30 @@ public interface CacheTemplate {
     boolean sMove(String source, String destination, Object member);
 
     /**
+     * S move async completable future.
+     *
+     * @param source      the source
+     * @param destination the destination
+     * @param member      the member
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> sMoveAsync(String source, String destination, Object member);
+
+    /**
      * S pop optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> sPop(String key);
+
+    /**
+     * S pop async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> sPopAsync(String key);
 
     /**
      * S pop set.
@@ -980,12 +1778,29 @@ public interface CacheTemplate {
     Set<Object> sPop(String key, int count);
 
     /**
+     * S pop async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> sPopAsync(String key, int count);
+
+    /**
      * S rand member optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> sRandMember(String key);
+
+    /**
+     * S rand member async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> sRandMemberAsync(String key);
 
     /**
      * S rand member set.
@@ -997,6 +1812,15 @@ public interface CacheTemplate {
     Set<Object> sRandMember(String key, int count);
 
     /**
+     * S rand member async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> sRandMemberAsync(String key, int count);
+
+    /**
      * S rem boolean.
      *
      * @param key     the key
@@ -1004,6 +1828,15 @@ public interface CacheTemplate {
      * @return the boolean
      */
     boolean sRem(String key, Collection<?> members);
+
+    /**
+     * S rem async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> sRemAsync(String key, Collection<?> members);
 
     /**
      * S scan iterator.
@@ -1042,6 +1875,15 @@ public interface CacheTemplate {
     Set<Object> sUnion(String key, String... otherKeys);
 
     /**
+     * S union async completable future.
+     *
+     * @param key       the key
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Set<Object>> sUnionAsync(String key, String... otherKeys);
+
+    /**
      * S union store int.
      *
      * @param destination the destination
@@ -1049,6 +1891,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int sUnionStore(String destination, String... keys);
+
+    /**
+     * S union store async completable future.
+     *
+     * @param destination the destination
+     * @param keys        the keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> sUnionStoreAsync(String destination, String... keys);
 
     /**
      * Bzm pop optional.
@@ -1062,6 +1913,17 @@ public interface CacheTemplate {
     Optional<Object> bzmPop(long timeout, TimeUnit unit, String key, boolean min);
 
     /**
+     * Bzm pop async completable future.
+     *
+     * @param timeout the timeout
+     * @param unit    the unit
+     * @param key     the key
+     * @param min     the min
+     * @return the completable future
+     */
+    CompletableFuture<Object> bzmPopAsync(long timeout, TimeUnit unit, String key, boolean min);
+
+    /**
      * Bzm pop collection.
      *
      * @param key   the key
@@ -1070,6 +1932,16 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> bzmPop(String key, boolean min, int count);
+
+    /**
+     * Bzm pop async completable future.
+     *
+     * @param key   the key
+     * @param min   the min
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> bzmPopAsync(String key, boolean min, int count);
 
     /**
      * Bzm pop optional.
@@ -1084,6 +1956,18 @@ public interface CacheTemplate {
     Optional<Object> bzmPop(long timeout, TimeUnit unit, String key, boolean min, String... otherKeys);
 
     /**
+     * Bzm pop async completable future.
+     *
+     * @param timeout   the timeout
+     * @param unit      the unit
+     * @param key       the key
+     * @param min       the min
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Object> bzmPopAsync(long timeout, TimeUnit unit, String key, boolean min, String... otherKeys);
+
+    /**
      * Bz pop max optional.
      *
      * @param key     the key
@@ -1094,6 +1978,16 @@ public interface CacheTemplate {
     Optional<Object> bzPopMax(String key, long timeout, TimeUnit unit);
 
     /**
+     * Bz pop max async completable future.
+     *
+     * @param key     the key
+     * @param timeout the timeout
+     * @param unit    the unit
+     * @return the completable future
+     */
+    CompletableFuture<Object> bzPopMaxAsync(String key, long timeout, TimeUnit unit);
+
+    /**
      * Bz pop max collection.
      *
      * @param key   the key
@@ -1101,6 +1995,15 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> bzPopMax(String key, int count);
+
+    /**
+     * Bz pop max async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> bzPopMaxAsync(String key, int count);
 
     /**
      * Bz pop min optional.
@@ -1113,6 +2016,16 @@ public interface CacheTemplate {
     Optional<Object> bzPopMin(String key, long timeout, TimeUnit unit);
 
     /**
+     * Bz pop min async completable future.
+     *
+     * @param key     the key
+     * @param timeout the timeout
+     * @param unit    the unit
+     * @return the completable future
+     */
+    CompletableFuture<Object> bzPopMinAsync(String key, long timeout, TimeUnit unit);
+
+    /**
      * Bz pop min collection.
      *
      * @param key   the key
@@ -1120,6 +2033,15 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> bzPopMin(String key, int count);
+
+    /**
+     * Bz pop min async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> bzPopMinAsync(String key, int count);
 
     /**
      * Z add boolean.
@@ -1132,6 +2054,16 @@ public interface CacheTemplate {
     boolean zAdd(String key, double score, Object member);
 
     /**
+     * Z add async completable future.
+     *
+     * @param key    the key
+     * @param score  the score
+     * @param member the member
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> zAddAsync(String key, double score, Object member);
+
+    /**
      * Z add int.
      *
      * @param key     the key
@@ -1141,12 +2073,29 @@ public interface CacheTemplate {
     int zAdd(String key, Map<Object, Double> members);
 
     /**
+     * Z add async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zAddAsync(String key, Map<Object, Double> members);
+
+    /**
      * Z card int.
      *
      * @param key the key
      * @return the int
      */
     int zCard(String key);
+
+    /**
+     * Z card async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zCardAsync(String key);
 
     /**
      * Z count int.
@@ -1161,6 +2110,18 @@ public interface CacheTemplate {
     int zCount(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
 
     /**
+     * Z count async completable future.
+     *
+     * @param key                 the key
+     * @param startScore          the start score
+     * @param startScoreInclusive the start score inclusive
+     * @param endScore            the end score
+     * @param endScoreInclusive   the end score inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zCountAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
+
+    /**
      * Z diff collection.
      *
      * @param key  the key
@@ -1170,6 +2131,15 @@ public interface CacheTemplate {
     Collection<Object> zDiff(String key, String... keys);
 
     /**
+     * Z diff async completable future.
+     *
+     * @param key  the key
+     * @param keys the keys
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zDiffAsync(String key, String... keys);
+
+    /**
      * Z diff store int.
      *
      * @param destination the destination
@@ -1177,6 +2147,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int zDiffStore(String destination, String... keys);
+
+    /**
+     * Z diff store async completable future.
+     *
+     * @param destination the destination
+     * @param keys        the keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zDiffStoreAsync(String destination, String... keys);
 
     /**
      * Z incr by double.
@@ -1189,6 +2168,16 @@ public interface CacheTemplate {
     Double zIncrBy(String key, Number increment, Object member);
 
     /**
+     * Z incr by async completable future.
+     *
+     * @param key       the key
+     * @param increment the increment
+     * @param member    the member
+     * @return the completable future
+     */
+    CompletableFuture<Double> zIncrByAsync(String key, Number increment, Object member);
+
+    /**
      * Z inter collection.
      *
      * @param key       the key
@@ -1198,6 +2187,15 @@ public interface CacheTemplate {
     Collection<Object> zInter(String key, String... otherKeys);
 
     /**
+     * Z inter async completable future.
+     *
+     * @param key       the key
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zInterAsync(String key, String... otherKeys);
+
+    /**
      * Z inter store int.
      *
      * @param destination the destination
@@ -1205,6 +2203,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int zInterStore(String destination, String... otherKeys);
+
+    /**
+     * Z inter store async completable future.
+     *
+     * @param destination the destination
+     * @param otherKeys   the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zInterStoreAsync(String destination, String... otherKeys);
 
     /**
      * Z inter store aggregate int.
@@ -1217,6 +2224,16 @@ public interface CacheTemplate {
     int zInterStoreAggregate(String destination, String aggregate, String... otherKeys);
 
     /**
+     * Z inter store aggregate async completable future.
+     *
+     * @param destination the destination
+     * @param aggregate   the aggregate
+     * @param otherKeys   the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zInterStoreAggregateAsync(String destination, String aggregate, String... otherKeys);
+
+    /**
      * Z inter store int.
      *
      * @param destination   the destination
@@ -1224,6 +2241,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int zInterStore(String destination, Map<String, Double> keyWithWeight);
+
+    /**
+     * Z inter store async completable future.
+     *
+     * @param destination   the destination
+     * @param keyWithWeight the key with weight
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zInterStoreAsync(String destination, Map<String, Double> keyWithWeight);
 
     /**
      * Z inter store int.
@@ -1234,6 +2260,16 @@ public interface CacheTemplate {
      * @return the int
      */
     int zInterStore(String destination, String aggregate, Map<String, Double> keyWithWeight);
+
+    /**
+     * Z inter store async completable future.
+     *
+     * @param destination   the destination
+     * @param aggregate     the aggregate
+     * @param keyWithWeight the key with weight
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zInterStoreAsync(String destination, String aggregate, Map<String, Double> keyWithWeight);
 
     /**
      * Z lex count int.
@@ -1248,6 +2284,18 @@ public interface CacheTemplate {
     int zLexCount(String key, String fromElement, boolean fromInclusive, String toElement, boolean toInclusive);
 
     /**
+     * Z lex count async completable future.
+     *
+     * @param key           the key
+     * @param fromElement   the from element
+     * @param fromInclusive the from inclusive
+     * @param toElement     the to element
+     * @param toInclusive   the to inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zLexCountAsync(String key, String fromElement, boolean fromInclusive, String toElement, boolean toInclusive);
+
+    /**
      * Z lex count head int.
      *
      * @param key         the key
@@ -1256,6 +2304,16 @@ public interface CacheTemplate {
      * @return the int
      */
     int zLexCountHead(String key, String toElement, boolean toInclusive);
+
+    /**
+     * Z lex count head async completable future.
+     *
+     * @param key         the key
+     * @param toElement   the to element
+     * @param toInclusive the to inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zLexCountHeadAsync(String key, String toElement, boolean toInclusive);
 
     /**
      * Z lex count tail int.
@@ -1268,6 +2326,16 @@ public interface CacheTemplate {
     int zLexCountTail(String key, String fromElement, boolean fromInclusive);
 
     /**
+     * Z lex count tail async completable future.
+     *
+     * @param key           the key
+     * @param fromElement   the from element
+     * @param fromInclusive the from inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zLexCountTailAsync(String key, String fromElement, boolean fromInclusive);
+
+    /**
      * Zm pop optional.
      *
      * @param key the key
@@ -1275,6 +2343,15 @@ public interface CacheTemplate {
      * @return the optional
      */
     Optional<Object> zmPop(String key, boolean min);
+
+    /**
+     * Zm pop async completable future.
+     *
+     * @param key the key
+     * @param min the min
+     * @return the completable future
+     */
+    CompletableFuture<Object> zmPopAsync(String key, boolean min);
 
 
     /**
@@ -1290,12 +2367,33 @@ public interface CacheTemplate {
     Optional<Object> zmPop(String key, boolean min, long timeout, TimeUnit unit, String... otherKeys);
 
     /**
+     * Zm pop async completable future.
+     *
+     * @param key       the key
+     * @param min       the min
+     * @param timeout   the timeout
+     * @param unit      the unit
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Object> zmPopAsync(String key, boolean min, long timeout, TimeUnit unit, String... otherKeys);
+
+
+    /**
      * Z pop max optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> zPopMax(String key);
+
+    /**
+     * Z pop max async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> zPopMaxAsync(String key);
 
     /**
      * Z pop max collection.
@@ -1307,12 +2405,29 @@ public interface CacheTemplate {
     Collection<Object> zPopMax(String key, int count);
 
     /**
+     * Z pop max async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zPopMaxAsync(String key, int count);
+
+    /**
      * Z pop min optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> zPopMin(String key);
+
+    /**
+     * Z pop min async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> zPopMinAsync(String key);
 
     /**
      * Z pop min collection.
@@ -1324,12 +2439,29 @@ public interface CacheTemplate {
     Collection<Object> zPopMin(String key, int count);
 
     /**
+     * Z pop min async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zPopMinAsync(String key, int count);
+
+    /**
      * Z rand member optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> zRandMember(String key);
+
+    /**
+     * Z rand member async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Object> zRandMemberAsync(String key);
 
     /**
      * Z rand member collection.
@@ -1339,6 +2471,15 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> zRandMember(String key, int count);
+
+    /**
+     * Z rand member async completable future.
+     *
+     * @param key   the key
+     * @param count the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRandMemberAsync(String key, int count);
 
     /**
      * Z range collection.
@@ -1351,6 +2492,16 @@ public interface CacheTemplate {
     Collection<Object> zRange(String key, int startIndex, int endIndex);
 
     /**
+     * Z range async completable future.
+     *
+     * @param key        the key
+     * @param startIndex the start index
+     * @param endIndex   the end index
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRangeAsync(String key, int startIndex, int endIndex);
+
+    /**
      * Z range collection.
      *
      * @param key                 the key
@@ -1361,6 +2512,18 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> zRange(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
+
+    /**
+     * Z range async completable future.
+     *
+     * @param key                 the key
+     * @param startScore          the start score
+     * @param startScoreInclusive the start score inclusive
+     * @param endScore            the end score
+     * @param endScoreInclusive   the end score inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRangeAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
 
     /**
      * Z range collection.
@@ -1377,6 +2540,20 @@ public interface CacheTemplate {
     Collection<Object> zRange(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count);
 
     /**
+     * Z range async completable future.
+     *
+     * @param key                 the key
+     * @param startScore          the start score
+     * @param startScoreInclusive the start score inclusive
+     * @param endScore            the end score
+     * @param endScoreInclusive   the end score inclusive
+     * @param offset              the offset
+     * @param count               the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRangeAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count);
+
+    /**
      * Z range reversed collection.
      *
      * @param key        the key
@@ -1385,6 +2562,16 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> zRangeReversed(String key, int startIndex, int endIndex);
+
+    /**
+     * Z range reversed async completable future.
+     *
+     * @param key        the key
+     * @param startIndex the start index
+     * @param endIndex   the end index
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRangeReversedAsync(String key, int startIndex, int endIndex);
 
     /**
      * Z range reversed collection.
@@ -1397,6 +2584,18 @@ public interface CacheTemplate {
      * @return the collection
      */
     Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
+
+    /**
+     * Z range reversed async completable future.
+     *
+     * @param key                 the key
+     * @param startScore          the start score
+     * @param startScoreInclusive the start score inclusive
+     * @param endScore            the end score
+     * @param endScoreInclusive   the end score inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRangeReversedAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
 
     /**
      * Z range reversed collection.
@@ -1413,6 +2612,20 @@ public interface CacheTemplate {
     Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count);
 
     /**
+     * Z range reversed async completable future.
+     *
+     * @param key                 the key
+     * @param startScore          the start score
+     * @param startScoreInclusive the start score inclusive
+     * @param endScore            the end score
+     * @param endScoreInclusive   the end score inclusive
+     * @param offset              the offset
+     * @param count               the count
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zRangeReversedAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count);
+
+    /**
      * Z rank optional.
      *
      * @param key    the key
@@ -1422,6 +2635,15 @@ public interface CacheTemplate {
     Optional<Integer> zRank(String key, Object member);
 
     /**
+     * Z rank async completable future.
+     *
+     * @param key    the key
+     * @param member the member
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zRankAsync(String key, Object member);
+
+    /**
      * Z rem boolean.
      *
      * @param key     the key
@@ -1429,6 +2651,15 @@ public interface CacheTemplate {
      * @return the boolean
      */
     boolean zRem(String key, Collection<?> members);
+
+    /**
+     * Z rem async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> zRemAsync(String key, Collection<?> members);
 
     /**
      * Z rem range by lex optional.
@@ -1443,6 +2674,18 @@ public interface CacheTemplate {
     Optional<Integer> zRemRangeByLex(String key, String fromElement, boolean fromInclusive, String toElement, boolean toInclusive);
 
     /**
+     * Z rem range by lex async completable future.
+     *
+     * @param key           the key
+     * @param fromElement   the from element
+     * @param fromInclusive the from inclusive
+     * @param toElement     the to element
+     * @param toInclusive   the to inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zRemRangeByLexAsync(String key, String fromElement, boolean fromInclusive, String toElement, boolean toInclusive);
+
+    /**
      * Z rem range by rank optional.
      *
      * @param key        the key
@@ -1451,6 +2694,16 @@ public interface CacheTemplate {
      * @return the optional
      */
     Optional<Integer> zRemRangeByRank(String key, int startIndex, int endIndex);
+
+    /**
+     * Z rem range by rank async completable future.
+     *
+     * @param key        the key
+     * @param startIndex the start index
+     * @param endIndex   the end index
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zRemRangeByRankAsync(String key, int startIndex, int endIndex);
 
     /**
      * Z rem range by score optional.
@@ -1465,6 +2718,18 @@ public interface CacheTemplate {
     Optional<Integer> zRemRangeByScore(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
 
     /**
+     * Z rem range by score async completable future.
+     *
+     * @param key                 the key
+     * @param startScore          the start score
+     * @param startScoreInclusive the start score inclusive
+     * @param endScore            the end score
+     * @param endScoreInclusive   the end score inclusive
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zRemRangeByScoreAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
+
+    /**
      * Z rev rank optional.
      *
      * @param key    the key
@@ -1472,6 +2737,15 @@ public interface CacheTemplate {
      * @return the optional
      */
     Optional<Integer> zRevRank(String key, Object member);
+
+    /**
+     * Z rev rank async completable future.
+     *
+     * @param key    the key
+     * @param member the member
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zRevRankAsync(String key, Object member);
 
     /**
      * Z scan iterator.
@@ -1502,6 +2776,15 @@ public interface CacheTemplate {
     List<Double> zScore(String key, List<Object> members);
 
     /**
+     * Z score async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<List<Double>> zScoreAsync(String key, List<Object> members);
+
+    /**
      * Z union collection.
      *
      * @param key       the key
@@ -1511,6 +2794,15 @@ public interface CacheTemplate {
     Collection<Object> zUnion(String key, String... otherKeys);
 
     /**
+     * Z union async completable future.
+     *
+     * @param key       the key
+     * @param otherKeys the other keys
+     * @return the completable future
+     */
+    CompletableFuture<Collection<Object>> zUnionAsync(String key, String... otherKeys);
+
+    /**
      * Z union store int.
      *
      * @param destination the destination
@@ -1518,6 +2810,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int zUnionStore(String destination, String... keys);
+
+    /**
+     * Z union store async completable future.
+     *
+     * @param destination the destination
+     * @param keys        the keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zUnionStoreAsync(String destination, String... keys);
 
     /**
      * Z union store aggregate int.
@@ -1530,6 +2831,16 @@ public interface CacheTemplate {
     int zUnionStoreAggregate(String destination, String aggregate, String... keys);
 
     /**
+     * Z union store aggregate async completable future.
+     *
+     * @param destination the destination
+     * @param aggregate   the aggregate
+     * @param keys        the keys
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zUnionStoreAggregateAsync(String destination, String aggregate, String... keys);
+
+    /**
      * Z union store int.
      *
      * @param destination   the destination
@@ -1537,6 +2848,15 @@ public interface CacheTemplate {
      * @return the int
      */
     int zUnionStore(String destination, Map<String, Double> keyWithWeight);
+
+    /**
+     * Z union store async completable future.
+     *
+     * @param destination   the destination
+     * @param keyWithWeight the key with weight
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zUnionStoreAsync(String destination, Map<String, Double> keyWithWeight);
 
     /**
      * Z union store int.
@@ -1549,12 +2869,23 @@ public interface CacheTemplate {
     int zUnionStore(String destination, String aggregate, Map<String, Double> keyWithWeight);
 
     /**
+     * Z union store async completable future.
+     *
+     * @param destination   the destination
+     * @param aggregate     the aggregate
+     * @param keyWithWeight the key with weight
+     * @return the completable future
+     */
+    CompletableFuture<Integer> zUnionStoreAsync(String destination, String aggregate, Map<String, Double> keyWithWeight);
+
+    /**
      * Append.
      *
      * @param key   the key
      * @param value the value
      */
     void append(String key, Object value);
+
 
     /**
      * Decr long.
@@ -1563,6 +2894,14 @@ public interface CacheTemplate {
      * @return the long
      */
     long decr(String key);
+
+    /**
+     * Decr async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> decrAsync(String key);
 
     /**
      * Decr by long.
@@ -1574,12 +2913,29 @@ public interface CacheTemplate {
     long decrBy(String key, long decrement);
 
     /**
+     * Decr by async completable future.
+     *
+     * @param key       the key
+     * @param decrement the decrement
+     * @return the completable future
+     */
+    CompletableFuture<Long> decrByAsync(String key, long decrement);
+
+    /**
      * Get optional.
      *
      * @param key the key
      * @return the optional
      */
     Optional<Object> get(String key);
+
+    /**
+     * Gets async.
+     *
+     * @param key the key
+     * @return the async
+     */
+    CompletableFuture<Object> getAsync(String key);
 
     /**
      * Gets del.
@@ -1590,6 +2946,14 @@ public interface CacheTemplate {
     Optional<Object> getDel(String key);
 
     /**
+     * Gets del async.
+     *
+     * @param key the key
+     * @return the del async
+     */
+    CompletableFuture<Object> getDelAsync(String key);
+
+    /**
      * Gets long.
      *
      * @param key the key
@@ -1598,12 +2962,28 @@ public interface CacheTemplate {
     long getLong(String key);
 
     /**
+     * Gets long async.
+     *
+     * @param key the key
+     * @return the long async
+     */
+    CompletableFuture<Long> getLongAsync(String key);
+
+    /**
      * Incr long.
      *
      * @param key the key
      * @return the long
      */
     long incr(String key);
+
+    /**
+     * Incr async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> incrAsync(String key);
 
     /**
      * Incr by long.
@@ -1615,12 +2995,29 @@ public interface CacheTemplate {
     long incrBy(String key, long increment);
 
     /**
+     * Incr by async completable future.
+     *
+     * @param key       the key
+     * @param increment the increment
+     * @return the completable future
+     */
+    CompletableFuture<Long> incrByAsync(String key, long increment);
+
+    /**
      * Gets double.
      *
      * @param key the key
      * @return the double
      */
     double getDouble(String key);
+
+    /**
+     * Gets double async.
+     *
+     * @param key the key
+     * @return the double async
+     */
+    CompletableFuture<Double> getDoubleAsync(String key);
 
     /**
      * Incr by float double.
@@ -1630,6 +3027,15 @@ public interface CacheTemplate {
      * @return the double
      */
     double incrByFloat(String key, double increment);
+
+    /**
+     * Incr by float async completable future.
+     *
+     * @param key       the key
+     * @param increment the increment
+     * @return the completable future
+     */
+    CompletableFuture<Double> incrByFloatAsync(String key, double increment);
 
     /**
      * Compare and set boolean.
@@ -1642,6 +3048,16 @@ public interface CacheTemplate {
     boolean compareAndSet(String key, long expect, long update);
 
     /**
+     * Compare and set async completable future.
+     *
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> compareAndSetAsync(String key, long expect, long update);
+
+    /**
      * Compare and set boolean.
      *
      * @param key    the key
@@ -1652,6 +3068,33 @@ public interface CacheTemplate {
     boolean compareAndSet(String key, double expect, double update);
 
     /**
+     * Compare and set async completable future.
+     *
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> compareAndSetAsync(String key, double expect, double update);
+
+    /**
+     * Set.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    void set(String key, Object value);
+
+    /**
+     * Sets async.
+     *
+     * @param key   the key
+     * @param value the value
+     * @return the async
+     */
+    CompletableFuture<Void> setAsync(String key, Object value);
+
+    /**
      * M get map.
      *
      * @param keys the keys
@@ -1660,11 +3103,27 @@ public interface CacheTemplate {
     Map<String, Object> mGet(String... keys);
 
     /**
+     * M get async completable future.
+     *
+     * @param keys the keys
+     * @return the completable future
+     */
+    CompletableFuture<Map<String, Object>> mGetAsync(String... keys);
+
+    /**
      * M set.
      *
      * @param kvMap the kv map
      */
     void mSet(Map<String, String> kvMap);
+
+    /**
+     * M set async completable future.
+     *
+     * @param kvMap the kv map
+     * @return the completable future
+     */
+    CompletableFuture<Void> mSetAsync(Map<String, String> kvMap);
 
     /**
      * M set nx boolean.
@@ -1675,12 +3134,63 @@ public interface CacheTemplate {
     boolean mSetNX(Map<String, String> kvMap);
 
     /**
+     * M set nx async completable future.
+     *
+     * @param kvMap the kv map
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> mSetNXAsync(Map<String, String> kvMap);
+
+    /**
      * Set.
      *
      * @param key   the key
      * @param value the value
      */
     void set(String key, String value);
+
+    /**
+     * Sets async.
+     *
+     * @param key   the key
+     * @param value the value
+     * @return the async
+     */
+    CompletableFuture<Void> setAsync(String key, String value);
+
+    /**
+     * Set.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    void set(String key, Long value);
+
+    /**
+     * Sets async.
+     *
+     * @param key   the key
+     * @param value the value
+     * @return the async
+     */
+    CompletableFuture<Void> setAsync(String key, Long value);
+
+    /**
+     * Set.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    void set(String key, Double value);
+
+    /**
+     * Sets async.
+     *
+     * @param key   the key
+     * @param value the value
+     * @return the async
+     */
+    CompletableFuture<Void> setAsync(String key, Double value);
 
     /**
      * Compare and set boolean.
@@ -1693,6 +3203,16 @@ public interface CacheTemplate {
     boolean compareAndSet(String key, String expect, String update);
 
     /**
+     * Compare and set async completable future.
+     *
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> compareAndSetAsync(String key, String expect, String update);
+
+    /**
      * Sets ex.
      *
      * @param key      the key
@@ -1702,12 +3222,30 @@ public interface CacheTemplate {
     void setEX(String key, String value, Duration duration);
 
     /**
+     * Sets ex async.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     * @return the ex async
+     */
+    CompletableFuture<Void> setEXAsync(String key, String value, Duration duration);
+
+    /**
      * Str len long.
      *
      * @param key the key
      * @return the long
      */
     long strLen(String key);
+
+    /**
+     * Str len async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> strLenAsync(String key);
 
     /**
      * Bf add boolean.
@@ -1767,6 +3305,17 @@ public interface CacheTemplate {
     boolean tryLock(String key, long waitTime, long leaseTime, TimeUnit unit) throws InterruptedException;
 
     /**
+     * Try lock async completable future.
+     *
+     * @param key       the key
+     * @param waitTime  the wait time
+     * @param leaseTime the lease time
+     * @param unit      the unit
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> tryLockAsync(String key, long waitTime, long leaseTime, TimeUnit unit);
+
+    /**
      * Try lock boolean.
      *
      * @param key      the key
@@ -1776,6 +3325,16 @@ public interface CacheTemplate {
      * @throws InterruptedException the interrupted exception
      */
     boolean tryLock(String key, long waitTime, TimeUnit unit) throws InterruptedException;
+
+    /**
+     * Try lock async completable future.
+     *
+     * @param key      the key
+     * @param waitTime the wait time
+     * @param unit     the unit
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> tryLockAsync(String key, long waitTime, TimeUnit unit);
 
     /**
      * Unlock.
@@ -1788,16 +3347,18 @@ public interface CacheTemplate {
      * Unlock async.
      *
      * @param key the key
+     * @return the completable future
      */
-    void unlockAsync(String key);
+    CompletableFuture<Void> unlockAsync(String key);
 
     /**
      * Unlock async.
      *
      * @param key      the key
      * @param threadId the thread id
+     * @return the completable future
      */
-    void unlockAsync(String key, long threadId);
+    CompletableFuture<Void> unlockAsync(String key, long threadId);
 
     /**
      * Force unlock boolean.
@@ -1806,6 +3367,14 @@ public interface CacheTemplate {
      * @return the boolean
      */
     boolean forceUnlock(String key);
+
+    /**
+     * Force unlock async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> forceUnlockAsync(String key);
 
     /**
      * Execute script optional.
@@ -1819,12 +3388,31 @@ public interface CacheTemplate {
     Optional<Object> executeScript(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException;
 
     /**
+     * Execute script async completable future.
+     *
+     * @param script the script
+     * @param keys   the keys
+     * @param values the values
+     * @return the completable future
+     * @throws NoSuchAlgorithmException the no such algorithm exception
+     */
+    CompletableFuture<Object> executeScriptAsync(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException;
+
+    /**
      * Exists long.
      *
      * @param keys the keys
      * @return the long
      */
     long exists(String... keys);
+
+    /**
+     * Exists async completable future.
+     *
+     * @param keys the keys
+     * @return the completable future
+     */
+    CompletableFuture<Long> existsAsync(String... keys);
 
     /**
      * Del long.
@@ -1835,12 +3423,28 @@ public interface CacheTemplate {
     long del(String... keys);
 
     /**
+     * Del async completable future.
+     *
+     * @param keys the keys
+     * @return the completable future
+     */
+    CompletableFuture<Long> delAsync(String... keys);
+
+    /**
      * Ttl long.
      *
      * @param key the key
      * @return the long
      */
     long ttl(String key);
+
+    /**
+     * Ttl async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> ttlAsync(String key);
 
     /**
      * Scan iterable.
@@ -1868,6 +3472,14 @@ public interface CacheTemplate {
     KeyType type(String key);
 
     /**
+     * Type async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<KeyType> typeAsync(String key);
+
+    /**
      * Try set rate limiter boolean.
      *
      * @param key          the key
@@ -1878,12 +3490,30 @@ public interface CacheTemplate {
     boolean trySetRateLimiter(String key, long rate, long rateInterval);
 
     /**
+     * Try set rate limiter async completable future.
+     *
+     * @param key          the key
+     * @param rate         the rate
+     * @param rateInterval the rate interval
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> trySetRateLimiterAsync(String key, long rate, long rateInterval);
+
+    /**
      * Try acquire boolean.
      *
      * @param key the key
      * @return the boolean
      */
     boolean tryAcquire(String key);
+
+    /**
+     * Try acquire async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> tryAcquireAsync(String key);
 
     /**
      * Try acquire boolean.
@@ -1893,5 +3523,14 @@ public interface CacheTemplate {
      * @return the boolean
      */
     boolean tryAcquire(String key, long permits);
+
+    /**
+     * Try acquire async completable future.
+     *
+     * @param key     the key
+     * @param permits the permits
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> tryAcquireAsync(String key, long permits);
 
 }

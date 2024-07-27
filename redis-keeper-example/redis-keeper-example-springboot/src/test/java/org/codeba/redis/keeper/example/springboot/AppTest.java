@@ -82,6 +82,13 @@ public class AppTest {
 
     }
 
+    @Test
+    public void testMyProxy() {
+        final MyCacheTemplate cacheTemplate = CacheTemplateProxy.asTemplate("ds1", MyCacheTemplate.class);
+        // Custom Methods
+        cacheTemplate.test();
+    }
+
     /**
      * Test template with status.
      */
