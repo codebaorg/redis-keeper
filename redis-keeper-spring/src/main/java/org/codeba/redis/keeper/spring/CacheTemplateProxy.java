@@ -22,49 +22,12 @@ import org.codeba.redis.keeper.core.CacheTemplate;
 import org.codeba.redis.keeper.core.CacheTemplateProvider;
 import org.codeba.redis.keeper.core.Provider;
 
-import java.lang.reflect.InvocationHandler;
-import java.lang.reflect.Method;
-import java.lang.reflect.Proxy;
-import java.util.Optional;
-
 /**
  * The type Cache template proxy.
  *
  * @author codeba
  */
-public class CacheTemplateProxy implements InvocationHandler {
-
-    /**
-     * The Datasource.
-     */
-    private String datasource;
-
-    private CacheDatasourceStatus status;
-
-    /**
-     * The Template provider.
-     */
-    private CacheTemplateProvider<?> templateProvider;
-
-    /**
-     * Instantiates a new Cache template proxy.
-     *
-     * @param datasource the datasource
-     */
-    public CacheTemplateProxy(String datasource) {
-        this.datasource = datasource;
-    }
-
-    /**
-     * Instantiates a new Cache template proxy.
-     *
-     * @param datasource the datasource
-     * @param status     the status
-     */
-    public CacheTemplateProxy(String datasource, CacheDatasourceStatus status) {
-        this.datasource = datasource;
-        this.status = status;
-    }
+public class CacheTemplateProxy {
 
     /**
      * As template cache template.
@@ -96,10 +59,7 @@ public class CacheTemplateProxy implements InvocationHandler {
      * @return the t
      */
     public static <T> T asTemplate(final String datasource, Class<T> templateClass) {
-        return (T) Proxy.newProxyInstance(
-                templateClass.getClassLoader(),
-                new Class[]{templateClass},
-                new CacheTemplateProxy(datasource));
+        return (T) getInvokeTemplate(datasource, null);
     }
 
     /**
@@ -112,30 +72,13 @@ public class CacheTemplateProxy implements InvocationHandler {
      * @return the t
      */
     public static <T> T asTemplate(final String datasource, final CacheDatasourceStatus status, Class<T> templateClass) {
-        return (T) Proxy.newProxyInstance(
-                templateClass.getClassLoader(),
-                new Class[]{templateClass},
-                new CacheTemplateProxy(datasource, status));
+        return (T) getInvokeTemplate(datasource, status);
     }
 
-    @Override
-    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        final String key = Provider.keyWithStatus(this.datasource, this.status);
-        final Optional<?> template = getTemplateProvider().getTemplate(key);
-        return method.invoke(template.get(), args);
+    private static Object getInvokeTemplate(final String datasource, final CacheDatasourceStatus status) {
+        final CacheTemplateProvider provider = ApplicationContextUtil.getBean(CacheTemplateProvider.class);
+        final String key = Provider.keyWithStatus(datasource, status);
+        return provider.getTemplate(key).get();
     }
-
-    /**
-     * Gets template provider.
-     *
-     * @return the template provider
-     */
-    private CacheTemplateProvider<?> getTemplateProvider() {
-        if (this.templateProvider == null) {
-            templateProvider = ApplicationContextUtil.getBean(CacheTemplateProvider.class);
-        }
-        return this.templateProvider;
-    }
-
 
 }
