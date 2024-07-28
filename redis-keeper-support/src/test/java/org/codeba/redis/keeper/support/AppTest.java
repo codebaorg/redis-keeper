@@ -39,6 +39,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +65,7 @@ public class AppTest extends TestCase {
     static {
         // todo please set your address and password
         String yourAddress = "redis://localhost:6379";
-        String yourPass = "yourPass";
+        String yourPass = "youPass";
         String properties = "redisKeeper:\n" +
                 "  redisson:\n" +
                 "    datasource:\n" +
@@ -232,12 +233,27 @@ public class AppTest extends TestCase {
     public void testBitCount() {
         String key = "testBitCount";
 
-        CACHE_TEMPLATE.setBit(key, 1, true);
+        assertFalse(CACHE_TEMPLATE.setBit(key, 1, true));
         CACHE_TEMPLATE.setBit(key, 2, true);
         CACHE_TEMPLATE.setBit(key, 4, true);
 
         final long bitCount = CACHE_TEMPLATE.bitCount(key);
+        assertTrue(CACHE_TEMPLATE.getBit(key, 1));
+        assertTrue(CACHE_TEMPLATE.getBit(key, 2));
+        assertTrue(CACHE_TEMPLATE.getBit(key, 4));
         assertEquals(3, bitCount);
+
+        CACHE_TEMPLATE.del(key);
+
+        final CompletableFuture<Boolean> f1 = CACHE_TEMPLATE.setBitAsync(key, 1, true);
+        final CompletableFuture<Boolean> f2 = CACHE_TEMPLATE.setBitAsync(key, 2, true);
+        final CompletableFuture<Boolean> f3 = CACHE_TEMPLATE.setBitAsync(key, 4, true);
+        CompletableFuture.allOf(f1, f2, f3).join();
+
+        assertTrue(CACHE_TEMPLATE.getBitAsync(key, 1).join());
+        assertTrue(CACHE_TEMPLATE.getBitAsync(key, 2).join());
+        assertTrue(CACHE_TEMPLATE.getBitAsync(key, 4).join());
+        assertEquals(3, CACHE_TEMPLATE.bitCountAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -256,6 +272,14 @@ public class AppTest extends TestCase {
         assertEquals(value, getSigned);
 
         CACHE_TEMPLATE.del(key);
+
+        final CompletableFuture<Long> f1 = CACHE_TEMPLATE.bitFieldSetSignedAsync(key, 8, 8, value);
+        assertEquals(0, f1.join().intValue());
+
+        final CompletableFuture<Long> f2 = CACHE_TEMPLATE.bitFieldGetSignedAsync(key, 8, 8);
+        assertEquals(value, f2.join().intValue());
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -270,6 +294,15 @@ public class AppTest extends TestCase {
         assertEquals(oldValue, setUnSigned);
 
         CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.bitFieldSetUnSignedAsync(key, 8, 8, oldValue)
+                .handle((v, e) ->
+                        CACHE_TEMPLATE.bitFieldSetUnSignedAsync(key, 8, 8, 97)
+                )
+                .thenAccept(v -> assertEquals(oldValue, v.join().intValue()))
+                .join();
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -277,12 +310,17 @@ public class AppTest extends TestCase {
      */
     public void testBitFieldGetSigned() {
         String key = "testBitFieldGetSigned";
-        CACHE_TEMPLATE.set(key, "hello");
+        CACHE_TEMPLATE.setObject(key, "hello");
 
         assertEquals(6, CACHE_TEMPLATE.bitFieldGetUnSigned(key, 4, 0));
         assertEquals(5, CACHE_TEMPLATE.bitFieldGetUnSigned(key, 3, 2));
         assertEquals(6, CACHE_TEMPLATE.bitFieldGetSigned(key, 4, 0));
         assertEquals(-3, CACHE_TEMPLATE.bitFieldGetSigned(key, 3, 2));
+
+        assertEquals(6, CACHE_TEMPLATE.bitFieldGetUnSignedAsync(key, 4, 0).join().intValue());
+        assertEquals(5, CACHE_TEMPLATE.bitFieldGetUnSignedAsync(key, 3, 2).join().intValue());
+        assertEquals(6, CACHE_TEMPLATE.bitFieldGetSignedAsync(key, 4, 0).join().intValue());
+        assertEquals(-3, CACHE_TEMPLATE.bitFieldGetSignedAsync(key, 3, 2).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -292,16 +330,18 @@ public class AppTest extends TestCase {
      */
     public void testBitOpOr() {
         String key1 = "key1";
-        CACHE_TEMPLATE.set(key1, "foobar");
+        CACHE_TEMPLATE.setObject(key1, "foobar");
 
         String key2 = "key2";
         CACHE_TEMPLATE.set(key2, "abcdef");
 
         CACHE_TEMPLATE.bitOpOr("dest", key1, key2);
-        final Object object = CACHE_TEMPLATE.get("dest").orElse(null);
-        assertEquals("goofev", object);
+        assertEquals("goofev", CACHE_TEMPLATE.get("dest").orElse(null));
 
-        CACHE_TEMPLATE.del(key1, key2, "dest");
+        CACHE_TEMPLATE.bitOpOrAsync("destAsync", key1, key2).join();
+        assertEquals("goofev", CACHE_TEMPLATE.get("destAsync").orElse(null));
+
+        CACHE_TEMPLATE.del(key1, key2, "dest", "destAsync");
     }
 
     /**
@@ -314,6 +354,10 @@ public class AppTest extends TestCase {
         assertFalse(CACHE_TEMPLATE.getBit(key, 0));
         assertTrue(CACHE_TEMPLATE.getBit(key, 7));
         assertFalse(CACHE_TEMPLATE.getBit(key, 100));
+
+        assertFalse(CACHE_TEMPLATE.getBitAsync(key, 0).join());
+        assertTrue(CACHE_TEMPLATE.getBitAsync(key, 7).join());
+        assertFalse(CACHE_TEMPLATE.getBitAsync(key, 100).join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -328,6 +372,11 @@ public class AppTest extends TestCase {
 
         final long catania = CACHE_TEMPLATE.geoAdd(key, 15.087269, 37.502669, "Catania");
         assertEquals(1, catania);
+
+        CACHE_TEMPLATE.del(key);
+
+        assertEquals(1, CACHE_TEMPLATE.geoAddAsync(key, 13.361389, 38.115556, "Palermo").join().intValue());
+        assertEquals(1, CACHE_TEMPLATE.geoAddAsync(key, 15.087269, 37.502669, "Catania").join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -346,6 +395,14 @@ public class AppTest extends TestCase {
         assertTrue(palermo1);
 
         CACHE_TEMPLATE.del(key);
+
+        assertFalse(CACHE_TEMPLATE.geoAddXXAsync(key, 13.361389, 38.115556, "Palermo").join());
+
+        CACHE_TEMPLATE.geoAddAsync(key, 13.361389, 38.115556, "Palermo").join();
+        assertTrue(CACHE_TEMPLATE.geoAddXXAsync(key, 13.361389, 38.115556, "Palermo").join());
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
     /**
@@ -356,14 +413,13 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.geoAdd(key, 13.361389, 38.115556, "Palermo");
         CACHE_TEMPLATE.geoAdd(key, 15.087269, 37.502669, "Catania");
 
-        final Double km = CACHE_TEMPLATE.geoDist(key, "Palermo", "Catania", "km");
-        assertEquals(166.2742, km);
+        assertEquals(166.2742, CACHE_TEMPLATE.geoDist(key, "Palermo", "Catania", "km"));
+        assertEquals(103.3182, CACHE_TEMPLATE.geoDist(key, "Palermo", "Catania", "mi"));
+        assertNull(CACHE_TEMPLATE.geoDist(key, "Foo", "Bar", "mi"));
 
-        final Double mi = CACHE_TEMPLATE.geoDist(key, "Palermo", "Catania", "mi");
-        assertEquals(103.3182, mi);
-
-        final Double fooBar = CACHE_TEMPLATE.geoDist(key, "Foo", "Bar", "mi");
-        assertNull(fooBar);
+        assertEquals(166.2742, CACHE_TEMPLATE.geoDistAsync(key, "Palermo", "Catania", "km").join());
+        assertEquals(103.3182, CACHE_TEMPLATE.geoDistAsync(key, "Palermo", "Catania", "mi").join());
+        assertNull(CACHE_TEMPLATE.geoDistAsync(key, "Foo", "Bar", "mi").join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -379,6 +435,10 @@ public class AppTest extends TestCase {
         final Map<Object, String> map = CACHE_TEMPLATE.geoHash(key, "Palermo", "Catania");
         assertEquals("sqc8b49rny0", map.get("Palermo"));
         assertEquals("sqdtr74hyu0", map.get("Catania"));
+
+        final Map<Object, String> map2 = CACHE_TEMPLATE.geoHashAsync(key, "Palermo", "Catania").join();
+        assertEquals("sqc8b49rny0", map2.get("Palermo"));
+        assertEquals("sqdtr74hyu0", map2.get("Catania"));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -398,6 +458,13 @@ public class AppTest extends TestCase {
         assertEquals(37.50266842333162032, map.get("Catania")[1]);
         assertNull(map.get("NonExisting"));
 
+        final Map<Object, double[]> map2 = CACHE_TEMPLATE.geoPosAsync(key, "Palermo", "Catania", "NonExisting").join();
+        assertEquals(13.36138933897018433, map2.get("Palermo")[0]);
+        assertEquals(38.11555639549629859, map2.get("Palermo")[1]);
+        assertEquals(15.08726745843887329, map2.get("Catania")[0]);
+        assertEquals(37.50266842333162032, map2.get("Catania")[1]);
+        assertNull(map2.get("NonExisting"));
+
         CACHE_TEMPLATE.del(key);
     }
 
@@ -412,6 +479,10 @@ public class AppTest extends TestCase {
         final Map<Object, Double> map = CACHE_TEMPLATE.geoRadius(key, 15, 37, 200, "km");
         assertEquals(190.4424, map.get("Palermo"));
         assertEquals(56.4413, map.get("Catania"));
+
+        final Map<Object, Double> map2 = CACHE_TEMPLATE.geoRadiusAsync(key, 15, 37, 200, "km").join();
+        assertEquals(190.4424, map2.get("Palermo"));
+        assertEquals(56.4413, map2.get("Catania"));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -503,9 +574,89 @@ public class AppTest extends TestCase {
     }
 
     /**
-     * Test h del.
+     * Test geo search async.
      */
-// hash
+    public void testGeoSearchAsync() {
+        String key = "testGeoSearchAsync";
+        CACHE_TEMPLATE.geoAddAsync(key, 13.361389, 38.115556, "Palermo").join();
+        CACHE_TEMPLATE.geoAddAsync(key, 15.087269, 37.502669, "Catania").join();
+        CACHE_TEMPLATE.geoAddAsync(key, 12.758489, 38.788135, "edge1").join();
+        CACHE_TEMPLATE.geoAddAsync(key, 17.241510, 38.788135, "edge2").join();
+
+        final List<Object> objects = CACHE_TEMPLATE.geoSearchAsync(key, 15, 37, 200, "km", "asc").join();
+        assertTrue(objects.containsAll(Arrays.asList("Catania", "Palermo")));
+
+        final List<Object> objects2 = CACHE_TEMPLATE.geoSearchAsync(key, 15, 37, 200, "km", 4, "desc").join();
+        assertEquals("Catania", objects2.get(1));
+        assertEquals("Palermo", objects2.get(0));
+
+        final List<Object> objects3 = CACHE_TEMPLATE.geoSearchAsync(key, 15, 37, 400, 400, "km", "asc").join();
+        assertEquals("Catania", objects3.get(0));
+        assertEquals("Palermo", objects3.get(1));
+        assertEquals("edge2", objects3.get(2));
+        assertEquals("edge1", objects3.get(3));
+
+        final List<Object> objects5 = CACHE_TEMPLATE.geoSearchAsync(key, 15, 37, 400, 400, "km", 10, "desc").join();
+        assertEquals("edge1", objects5.get(0));
+        assertEquals("edge2", objects5.get(1));
+        assertEquals("Palermo", objects5.get(2));
+        assertEquals("Catania", objects5.get(3));
+
+        final List<Object> objects6 = CACHE_TEMPLATE.geoSearchAsync(key, "Catania", 200, "km", "asc").join();
+        assertEquals("Catania", objects6.get(0));
+        assertEquals("Palermo", objects6.get(1));
+
+        final List<Object> objects8 = CACHE_TEMPLATE.geoSearchAsync(key, "Catania", 200, "km", 1, "asc").join();
+        assertEquals("Catania", objects8.get(0));
+
+        final List<Object> objects9 = CACHE_TEMPLATE.geoSearchAsync(key, "Catania", 400, 400, "km", "asc").join();
+        assertEquals("Catania", objects9.get(0));
+        assertEquals("Palermo", objects9.get(1));
+        assertEquals("edge2", objects9.get(2));
+
+        final List<Object> objects11 = CACHE_TEMPLATE.geoSearchAsync(key, "Catania", 400, 400, "km", 2, "desc").join();
+        assertEquals("edge2", objects11.get(0));
+        assertEquals("Palermo", objects11.get(1));
+
+        final Map<Object, Double> map1 = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, 15, 37, 200, "km", "asc").join();
+        assertEquals(56.4413, map1.get("Catania"));
+        assertEquals(190.4424, map1.get("Palermo"));
+
+        final Map<Object, Double> map2 = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, 15, 37, 200, "km", 2, "asc").join();
+        assertEquals(56.4413, map2.get("Catania"));
+        assertEquals(190.4424, map2.get("Palermo"));
+
+        final Map<Object, Double> map3 = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, 15, 37, 400, 400, "km", "asc").join();
+        assertEquals(56.4413, map3.get("Catania"));
+        assertEquals(190.4424, map3.get("Palermo"));
+        assertEquals(279.7403, map3.get("edge2"));
+        assertEquals(279.7405, map3.get("edge1"));
+
+        final Map<Object, Double> map = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, 15, 37, 400, 400, "km", 2, "desc").join();
+        assertEquals(279.7405, map.get("edge1"));
+        assertEquals(279.7403, map.get("edge2"));
+
+        final Map<Object, Double> map4 = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, "Palermo", 200, "km", "asc").join();
+        assertEquals(0.0000, map4.get("Palermo"));
+        assertEquals(91.4007, map4.get("edge1"));
+        assertEquals(166.2742, map4.get("Catania"));
+
+        final Map<Object, Double> map5 = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, "Palermo", 200, "km", 1, "asc").join();
+        assertEquals(0.0000, map5.get("Palermo"));
+
+
+        final Map<Object, Double> map6 = CACHE_TEMPLATE.geoSearchWithDistanceAsync(key, "Palermo", 400, 400, "km", "asc").join();
+        assertEquals(0.0000, map6.get("Palermo"));
+        assertEquals(91.4007, map6.get("edge1"));
+        assertEquals(166.2742, map6.get("Catania"));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
+     * Test h del.
+     * hash
+     */
     public void testHDel() {
         String key = "testHDel";
         String field = "field1";
@@ -518,23 +669,25 @@ public class AppTest extends TestCase {
         assertFalse(map1.get(field));
 
         CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.hSetAsync(key, field, "foo").join();
+        assertEquals(1, (long) CACHE_TEMPLATE.hDelAsync(key, field).join());
+        assertEquals(0, (long) CACHE_TEMPLATE.hDelAsync(key, field).join());
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
     /**
      * Test h del async.
-     *
-     * @throws InterruptedException the interrupted exception
      */
-    public void testHDelAsync() throws InterruptedException {
+    public void testHDelAsync() {
         String key = "testHDelAsync";
         String field = "field1";
 
         CACHE_TEMPLATE.hSet(key, field, "foo");
 
-        CACHE_TEMPLATE.hDelAsync(key, field);
-
-        Thread.sleep(1000);
-
+        CACHE_TEMPLATE.hDelAsync(key, field).join();
         final Optional<Object> optional = CACHE_TEMPLATE.hGet(key, field);
         assertFalse(optional.isPresent());
 
@@ -555,6 +708,10 @@ public class AppTest extends TestCase {
         assertTrue(map.get(field1));
         assertFalse(map.get(field2));
 
+        final Map<String, CompletableFuture<Boolean>> futureMap = CACHE_TEMPLATE.hExistsAsync(key, field1, field2);
+        assertTrue(futureMap.get(field1).join());
+        assertFalse(futureMap.get(field2).join());
+
         CACHE_TEMPLATE.del(key);
     }
 
@@ -569,6 +726,7 @@ public class AppTest extends TestCase {
 
         final Optional<Object> optional = CACHE_TEMPLATE.hGet(key, field1);
         assertEquals("foo", optional.orElse(null));
+        assertEquals("foo", CACHE_TEMPLATE.hGetAsync(key, field1).join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -587,6 +745,10 @@ public class AppTest extends TestCase {
         final Map<Object, Object> map = CACHE_TEMPLATE.hGetAll(key);
         assertEquals("hello", map.get(field1));
         assertEquals("world", map.get(field2));
+
+        final Map<Object, Object> map2 = CACHE_TEMPLATE.hGetAllAsync(key).join();
+        assertEquals("hello", map2.get(field1));
+        assertEquals("world", map2.get(field2));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -610,6 +772,14 @@ public class AppTest extends TestCase {
         assertEquals(-5, Long.parseLong(object2.toString()));
 
         CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.hSetAsync(key, field1, 5).join();
+        assertEquals(6, Long.parseLong(CACHE_TEMPLATE.hIncrByAsync(key, field1, 1).join().toString()));
+        assertEquals(5, Long.parseLong(CACHE_TEMPLATE.hIncrByAsync(key, field1, -1).join().toString()));
+        assertEquals(-5, Long.parseLong(CACHE_TEMPLATE.hIncrByAsync(key, field1, -10).join().toString()));
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
     /**
@@ -623,14 +793,9 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.hSet(key, field1, 5);
 
-        CACHE_TEMPLATE.hIncrByAsync(key, field1, 1);
-        Thread.sleep(200);
-
-        CACHE_TEMPLATE.hIncrByAsync(key, field1, -1);
-        Thread.sleep(200);
-
-        CACHE_TEMPLATE.hIncrByAsync(key, field1, -10);
-        Thread.sleep(200);
+        CACHE_TEMPLATE.hIncrByAsync(key, field1, 1).join();
+        CACHE_TEMPLATE.hIncrByAsync(key, field1, -1).join();
+        CACHE_TEMPLATE.hIncrByAsync(key, field1, -10).join();
 
         final Optional<Object> optional = CACHE_TEMPLATE.hGet(key, field1);
         assertEquals(-5, Long.parseLong(optional.get().toString()));
@@ -652,6 +817,8 @@ public class AppTest extends TestCase {
         final Collection<Object> objects = CACHE_TEMPLATE.hKeys(key);
         assertTrue(objects.containsAll(Arrays.asList("field1", "field2")));
 
+        assertTrue(CACHE_TEMPLATE.hKeysAsync(key).join().containsAll(Arrays.asList("field1", "field2")));
+
         CACHE_TEMPLATE.del(key);
     }
 
@@ -663,11 +830,13 @@ public class AppTest extends TestCase {
         String field1 = "field1";
         String field2 = "field2";
 
-        CACHE_TEMPLATE.hSet(key, field1, "hello");
-        CACHE_TEMPLATE.hSet(key, field2, "world");
+        CACHE_TEMPLATE.hmSetAsync(key, new HashMap<String, String>() {{
+            put(field1, "hello");
+            put(field2, "world");
+        }}).join();
 
-        final int hLen = CACHE_TEMPLATE.hLen(key);
-        assertEquals(2, hLen);
+        assertEquals(2, CACHE_TEMPLATE.hLen(key));
+        assertEquals(2, CACHE_TEMPLATE.hLenAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -691,6 +860,15 @@ public class AppTest extends TestCase {
         assertEquals("hello", map.get(field1));
         assertEquals("world", map.get(field2));
         assertNull(map.get("nofield"));
+
+        final Map<Object, Object> map2 = CACHE_TEMPLATE.hmGetAsync(key, new HashSet<Object>() {{
+            add(field1);
+            add(field2);
+            add("nofield");
+        }}).join();
+        assertEquals("hello", map2.get(field1));
+        assertEquals("world", map2.get(field2));
+        assertNull(map2.get("nofield"));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -727,9 +905,7 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.hmSetAsync(key, new HashMap<String, Object>() {{
             put(field1, "Hello");
             put(field2, "World");
-        }});
-
-        Thread.sleep(1000);
+        }}).join();
 
         assertEquals("Hello", CACHE_TEMPLATE.hGet(key, field1).get().toString());
         assertEquals("World", CACHE_TEMPLATE.hGet(key, field2).get().toString());
@@ -750,13 +926,17 @@ public class AppTest extends TestCase {
             put(field1, "obverse");
             put(field2, "reverse");
             put(field3, "null");
-        }});
+        }}).join();
 
+        final List<String> fields = Arrays.asList(field1, field2, field3);
         final Set<Object> objects = CACHE_TEMPLATE.hRandField(key, 1);
-        assertTrue(Arrays.asList(field1, field2, field3).containsAll(objects));
+        assertTrue(fields.containsAll(objects));
 
         final Set<Object> objects1 = CACHE_TEMPLATE.hRandField(key, 1);
-        assertTrue(Arrays.asList(field1, field2, field3).containsAll(objects1));
+        assertTrue(fields.containsAll(objects1));
+
+        assertTrue(fields.containsAll(CACHE_TEMPLATE.hRandFieldsAsync(key, 1).join()));
+        assertTrue(fields.containsAll(CACHE_TEMPLATE.hRandFieldsAsync(key, 1).join()));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -775,11 +955,15 @@ public class AppTest extends TestCase {
             put(field2, "reverse");
             put(field3, "null");
         }};
-        CACHE_TEMPLATE.hmSetAsync(key, setMap);
+        CACHE_TEMPLATE.hmSetAsync(key, setMap).join();
 
         final Map<Object, Object> map = CACHE_TEMPLATE.hRandFieldWithValues(key, -5);
         assertTrue(setMap.keySet().containsAll(map.keySet()));
         assertTrue(setMap.values().containsAll(map.values()));
+
+        final Map<Object, Object> map2 = CACHE_TEMPLATE.hRandFieldWithValuesAsync(key, -5).join();
+        assertTrue(setMap.keySet().containsAll(map2.keySet()));
+        assertTrue(setMap.values().containsAll(map2.values()));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -834,20 +1018,14 @@ public class AppTest extends TestCase {
 
     /**
      * Test h set nx async.
-     *
-     * @throws InterruptedException the interrupted exception
      */
-    public void testHSetNXAsync() throws InterruptedException {
+    public void testHSetNXAsync() {
         String key = "testHSetNXAsync";
 
-        CACHE_TEMPLATE.hSetNXAsync(key, "field", "Hello");
-        Thread.sleep(200);
+        CACHE_TEMPLATE.hSetNXAsync(key, "field", "Hello").join();
+        CACHE_TEMPLATE.hSetNXAsync(key, "field", "World").join();
 
-        CACHE_TEMPLATE.hSetNXAsync(key, "field", "World");
-
-        Thread.sleep(200);
-
-        assertEquals("Hello", CACHE_TEMPLATE.hGet(key, "field").get());
+        assertEquals("Hello", CACHE_TEMPLATE.hGetAsync(key, "field").join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -876,6 +1054,10 @@ public class AppTest extends TestCase {
         final int i2 = CACHE_TEMPLATE.hStrLen(key, filed3);
         assertEquals(i2, 4);
 
+        assertEquals(CACHE_TEMPLATE.hStrLenAsync(key, filed1).join().intValue(), 10);
+        assertEquals(CACHE_TEMPLATE.hStrLenAsync(key, filed2).join().intValue(), 2);
+        assertEquals(CACHE_TEMPLATE.hStrLenAsync(key, filed3).join().intValue(), 4);
+
         CACHE_TEMPLATE.del(key);
     }
 
@@ -890,6 +1072,9 @@ public class AppTest extends TestCase {
 
         final Collection<Object> objects = CACHE_TEMPLATE.hVALs(key);
         assertTrue(objects.containsAll(Arrays.asList("Hello", "World")));
+
+        final Collection<Object> objects2 = CACHE_TEMPLATE.hVALsAsync(key).join();
+        assertTrue(objects2.containsAll(Arrays.asList("Hello", "World")));
 
         CACHE_TEMPLATE.del(key);
 
@@ -918,6 +1103,32 @@ public class AppTest extends TestCase {
         assertEquals("two", objects.get(0));
 
         final List<Object> objects1 = CACHE_TEMPLATE.lRange(destKey, 0, -1);
+        assertEquals("three", objects1.get(0));
+        assertEquals("one", objects1.get(1));
+
+        CACHE_TEMPLATE.del(key, destKey);
+
+    }
+
+    /**
+     * Test bl move async.
+     */
+    public void testBlMoveAsync() {
+        String key = "testBlMoveAsync";
+        String destKey = "testBlMoveAsync-my-other-list";
+
+        CACHE_TEMPLATE.rPushAsync(key, "one", "two", "three").join();
+
+        final Object optional = CACHE_TEMPLATE.blMoveAsync(key, destKey, Duration.ofSeconds(3), false).join();
+        assertEquals("three", optional);
+
+        final Object optional1 = CACHE_TEMPLATE.blMoveAsync(key, destKey, Duration.ofSeconds(3), true).join();
+        assertEquals("one", optional1);
+
+        final List<Object> objects = CACHE_TEMPLATE.lRangeAsync(key, 0, -1).join();
+        assertEquals("two", objects.get(0));
+
+        final List<Object> objects1 = CACHE_TEMPLATE.lRangeAsync(destKey, 0, -1).join();
         assertEquals("three", objects1.get(0));
         assertEquals("one", objects1.get(1));
 
@@ -957,6 +1168,35 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test bl pop async.
+     *
+     * @throws InterruptedException the interrupted exception
+     */
+    public void testBlPopAsync() throws InterruptedException {
+        String key = "testBlPopAsync";
+
+        final boolean b = CACHE_TEMPLATE.rPushAsync(key, "one", "two", "three", "four", "five").join();
+        assertTrue(b);
+
+        final Object optional = CACHE_TEMPLATE.blPopAsync(key).join();
+        assertEquals("one", optional);
+
+        final Object optional1 = CACHE_TEMPLATE.blPopAsync(key, 10, TimeUnit.SECONDS).join();
+        assertEquals("two", optional1);
+
+        final List<Object> objects = CACHE_TEMPLATE.blPopAsync(key, 3).join();
+        assertEquals("three", objects.get(0));
+        assertEquals("four", objects.get(1));
+        assertEquals("five", objects.get(2));
+
+        final Object optional2 = CACHE_TEMPLATE.blPopAsync(key, 3, TimeUnit.SECONDS, "list3").join();
+        assertNull(optional2);
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+    /**
      * Test br pop.
      *
      * @throws InterruptedException the interrupted exception
@@ -987,6 +1227,33 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test br pop async.
+     *
+     * @throws InterruptedException the interrupted exception
+     */
+    public void testBrPopAsync() throws InterruptedException {
+        String key = "testBrPopAsync";
+
+        CACHE_TEMPLATE.lPush(key, "one", "two", "three", "four", "five");
+
+        final Object optional = CACHE_TEMPLATE.brPopAsync(key).join();
+        assertEquals("one", optional);
+
+        final Object optional1 = CACHE_TEMPLATE.brPopAsync(key, 10, TimeUnit.SECONDS).join();
+        assertEquals("two", optional1);
+
+        final List<Object> objects = CACHE_TEMPLATE.brPopAsync(key, 3).join();
+        assertEquals("three", objects.get(0));
+        assertEquals("four", objects.get(1));
+        assertEquals("five", objects.get(2));
+
+        final Object optional2 = CACHE_TEMPLATE.brPopAsync(key, 3, TimeUnit.SECONDS, "list3").join();
+        assertNull(optional2);
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test br pop l push.
      *
      * @throws InterruptedException the interrupted exception
@@ -998,9 +1265,26 @@ public class AppTest extends TestCase {
         final int push1 = CACHE_TEMPLATE.lPush(key, "one", "two", "three", "four", "five");
         assertEquals(5, push1);
 
-        final Optional<Object> optional = CACHE_TEMPLATE.brPoplPush(key, key2, 3, TimeUnit.SECONDS);
+        final Optional<Object> optional = CACHE_TEMPLATE.brPopLPush(key, key2, 3, TimeUnit.SECONDS);
         assertTrue(optional.isPresent());
         assertEquals("one", optional.get());
+
+        CACHE_TEMPLATE.del(key, key2);
+
+    }
+
+    /**
+     * Test br pop l push async.
+     */
+    public void testBrPopLPushAsync() {
+        String key = "testBrPopLPushAsync";
+        String key2 = "testBrPopLPushAsync-my-other-list";
+
+        final int push1 = CACHE_TEMPLATE.lPush(key, "one", "two", "three", "four", "five");
+        assertEquals(5, push1);
+
+        final Object optional = CACHE_TEMPLATE.brPopLPushAsync(key, key2, 3, TimeUnit.SECONDS).join();
+        assertEquals("one", optional);
 
         CACHE_TEMPLATE.del(key, key2);
 
@@ -1020,6 +1304,11 @@ public class AppTest extends TestCase {
         assertEquals("two", CACHE_TEMPLATE.lIndex(key, 3).get());
         assertFalse(CACHE_TEMPLATE.lIndex("nonkey", 0).isPresent());
 
+        assertEquals("five", CACHE_TEMPLATE.lIndexAsync(key, 0).join());
+        assertEquals("three", CACHE_TEMPLATE.lIndexAsync(key, 2).join());
+        assertEquals("two", CACHE_TEMPLATE.lIndexAsync(key, 3).join());
+        assertNull(CACHE_TEMPLATE.lIndexAsync("nonkey", 0).join());
+
         CACHE_TEMPLATE.del(key);
     }
 
@@ -1034,6 +1323,11 @@ public class AppTest extends TestCase {
 
         final int i = CACHE_TEMPLATE.lInsert(key, true, "World", "There");
         assertEquals(3, i);
+
+        final Boolean there = CACHE_TEMPLATE.lRemAsync(key, "There").join();
+        assertTrue(there);
+
+        assertEquals(3, CACHE_TEMPLATE.lInsertAsync(key, true, "World", "There").join().intValue());
 
         final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
         assertEquals("Hello", objects.get(0));
@@ -1052,6 +1346,7 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.lPush(key, "World", "Hello");
         assertEquals(2, CACHE_TEMPLATE.llen(key));
+        assertEquals(2, CACHE_TEMPLATE.llenAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
 
@@ -1062,7 +1357,7 @@ public class AppTest extends TestCase {
      */
     public void testLMove() {
         String key = "testLMove";
-        String destKey = "testLMovemyotherlist";
+        String destKey = "testLMove-my-other-list";
 
         CACHE_TEMPLATE.rPush(key, "one", "two", "three");
 
@@ -1073,6 +1368,31 @@ public class AppTest extends TestCase {
         final Optional<Object> optional1 = CACHE_TEMPLATE.lMove(key, destKey, true);
         assertTrue(optional1.isPresent());
         assertEquals("one", optional1.get());
+
+        final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
+        assertEquals("two", objects.get(0));
+
+        final List<Object> objects1 = CACHE_TEMPLATE.lRange(destKey, 0, -1);
+        assertEquals("three", objects1.get(0));
+        assertEquals("one", objects1.get(1));
+
+        CACHE_TEMPLATE.del(key, destKey);
+    }
+
+    /**
+     * Test l move async.
+     */
+    public void testLMoveAsync() {
+        String key = "testLMoveAsync";
+        String destKey = "testLMoveAsync-my-other-list";
+
+        CACHE_TEMPLATE.rPush(key, "one", "two", "three");
+
+        final Object optional = CACHE_TEMPLATE.lMoveAsync(key, destKey, false).join();
+        assertEquals("three", optional);
+
+        final Object optional1 = CACHE_TEMPLATE.lMoveAsync(key, destKey, true).join();
+        assertEquals("one", optional1);
 
         final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
         assertEquals("two", objects.get(0));
@@ -1174,11 +1494,34 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test l pop async.
+     */
+    public void testLPopAsync() {
+        String key = "testLPopAsync";
+
+        final boolean b = CACHE_TEMPLATE.rPush(key, "one", "two", "three", "four", "five");
+        assertTrue(b);
+
+        final List<Object> objects1 = CACHE_TEMPLATE.lPopAsync(key, 1).join();
+        assertEquals("one", objects1.get(0));
+
+        final List<Object> objects2 = CACHE_TEMPLATE.lPopAsync(key, 1).join();
+        assertEquals("two", objects2.get(0));
+
+        final List<Object> objects = CACHE_TEMPLATE.blPopAsync(key, 3).join();
+        assertEquals("three", objects.get(0));
+        assertEquals("four", objects.get(1));
+        assertEquals("five", objects.get(2));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test l push x.
      */
     public void testLPushX() {
         String key = "testLPushX";
-        String key2 = "testLPushXmyotherlist";
+        String key2 = "testLPushX-my-other-list";
 
         final int i = CACHE_TEMPLATE.lPush(key, "World");
         assertEquals(1, i);
@@ -1187,6 +1530,25 @@ public class AppTest extends TestCase {
         assertEquals(2, i1);
 
         final int i2 = CACHE_TEMPLATE.lPushX(key2, "Hello");
+        assertEquals(0, i2);
+
+        CACHE_TEMPLATE.del(key, key2);
+
+    }
+
+    /**
+     * Test l push x async.
+     */
+    public void testLPushXAsync() {
+        String key = "testLPushXAsync";
+        String key2 = "testLPushXAsync-my-other-list";
+
+        CACHE_TEMPLATE.lPush(key, "World");
+
+        final int i1 = CACHE_TEMPLATE.lPushXAsync(key, "Hello").join();
+        assertEquals(2, i1);
+
+        final int i2 = CACHE_TEMPLATE.lPushXAsync(key2, "Hello").join();
         assertEquals(0, i2);
 
         CACHE_TEMPLATE.del(key, key2);
@@ -1206,6 +1568,29 @@ public class AppTest extends TestCase {
         assertTrue(b1);
 
         final boolean b2 = CACHE_TEMPLATE.lRem(key, "hello");
+        assertTrue(b2);
+
+        final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
+        assertEquals("foo", objects.get(0));
+        assertEquals("hello", objects.get(1));
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+    /**
+     * Test l rem async.
+     */
+    public void testLRemAsync() {
+        String key = "testLRemAsync";
+
+        final boolean b = CACHE_TEMPLATE.rPush(key, "hello", "hello", "foo", "hello");
+        assertTrue(b);
+
+        final boolean b1 = CACHE_TEMPLATE.lRemAsync(key, "hello").join();
+        assertTrue(b1);
+
+        final boolean b2 = CACHE_TEMPLATE.lRemAsync(key, "hello").join();
         assertTrue(b2);
 
         final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
@@ -1238,6 +1623,27 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test l set async.
+     */
+    public void testLSetAsync() {
+        String key = "testLSetAsync";
+
+        final boolean b = CACHE_TEMPLATE.rPush(key, "one", "two", "three");
+        assertTrue(b);
+
+        CACHE_TEMPLATE.lSetAsync(key, 0, "four").join();
+        CACHE_TEMPLATE.lSetAsync(key, -2, "five").join();
+
+        final List<Object> objects = CACHE_TEMPLATE.lRangeAsync(key, 0, -1).join();
+        assertEquals("four", objects.get(0));
+        assertEquals("five", objects.get(1));
+        assertEquals("three", objects.get(2));
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+    /**
      * Test l trim.
      */
     public void testLTrim() {
@@ -1251,6 +1657,9 @@ public class AppTest extends TestCase {
         final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
         assertEquals("two", objects.get(0));
         assertEquals("three", objects.get(1));
+
+        CACHE_TEMPLATE.lTrimAsync(key, 1, -1).join();
+        assertEquals("three", CACHE_TEMPLATE.lRange(key, 0, -1).get(0));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1279,18 +1688,57 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test r pop async.
+     */
+    public void testRPopAsync() {
+        String key = "testRPopAsync";
+
+        final int i = CACHE_TEMPLATE.lPush(key, "one", "two", "three", "four", "five");
+        assertEquals(5, i);
+
+        final List<Object> objects1 = CACHE_TEMPLATE.rPopAsync(key, 1).join();
+        assertEquals("one", objects1.get(0));
+
+        final List<Object> objects2 = CACHE_TEMPLATE.rPopAsync(key, 1).join();
+        assertEquals("two", objects2.get(0));
+
+        final List<Object> objects = CACHE_TEMPLATE.rPopAsync(key, 3).join();
+        assertEquals("three", objects.get(0));
+        assertEquals("four", objects.get(1));
+        assertEquals("five", objects.get(2));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test r pop l push.
      */
     public void testRPopLPush() {
         String key = "testRPopLPush";
-        String key2 = "myotherlist";
+        String key2 = "testRPopLPush-my-other-list";
 
         final int push1 = CACHE_TEMPLATE.lPush(key, "one", "two", "three", "four", "five");
         assertEquals(5, push1);
 
-        final Optional<Object> optional = CACHE_TEMPLATE.rPoplPush(key, key2);
+        final Optional<Object> optional = CACHE_TEMPLATE.rPopLPush(key, key2);
         assertTrue(optional.isPresent());
         assertEquals("one", optional.get());
+
+        CACHE_TEMPLATE.del(key, key2);
+    }
+
+    /**
+     * Test r pop l push async.
+     */
+    public void testRPopLPushAsync() {
+        String key = "testRPopLPushAsync";
+        String key2 = "testRPopLPushAsync-my-other-list";
+
+        final int push1 = CACHE_TEMPLATE.lPush(key, "one", "two", "three", "four", "five");
+        assertEquals(5, push1);
+
+        final Object optional = CACHE_TEMPLATE.rPopLPushAsync(key, key2).join();
+        assertEquals("one", optional);
 
         CACHE_TEMPLATE.del(key, key2);
     }
@@ -1300,7 +1748,7 @@ public class AppTest extends TestCase {
      */
     public void testRPushX() {
         String key = "testRPushX";
-        String key2 = "testRPushXmyotherlist";
+        String key2 = "testRPushX-my-other-list";
 
         final boolean b = CACHE_TEMPLATE.rPush(key, "World");
         assertTrue(b);
@@ -1314,15 +1762,30 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.del(key, key2);
     }
 
+    /**
+     * Test r push x async.
+     */
+    public void testRPushXAsync() {
+        String key = "testRPushXAsync";
+        String key2 = "testRPushXAsync-my-other-list";
 
-    // set
+        final boolean b = CACHE_TEMPLATE.rPush(key, "World");
+        assertTrue(b);
+
+        final int i1 = CACHE_TEMPLATE.rPushXAsync(key, "Hello").join();
+        assertEquals(2, i1);
+
+        final int i2 = CACHE_TEMPLATE.rPushXAsync(key2, "Hello").join();
+        assertEquals(0, i2);
+
+        CACHE_TEMPLATE.del(key, key2);
+    }
 
     /**
      * Test s add.
-     *
-     * @throws InterruptedException the interrupted exception
+     * set
      */
-    public void testSAdd() throws InterruptedException {
+    public void testSAdd() {
         String key = "testSAdd";
 
         final boolean sAdd = CACHE_TEMPLATE.sAdd(key, "hello");
@@ -1337,13 +1800,15 @@ public class AppTest extends TestCase {
         final boolean b2 = CACHE_TEMPLATE.sAdd(key, Arrays.asList("world", "one"));
         assertTrue(b2);
 
-        CACHE_TEMPLATE.sAddAsync(key, "two");
-        CACHE_TEMPLATE.sAddAsync(key, Arrays.asList("three", "four"));
+        CACHE_TEMPLATE.sAddAsync(key, "two").join();
+        CACHE_TEMPLATE.sAddAsync(key, Arrays.asList("three", "four")).join();
 
-        Thread.sleep(1000);
+        final List<String> values = Arrays.asList("hello", "world", "one", "two", "three", "four");
 
         final Set<Object> objects = CACHE_TEMPLATE.sMembers(key);
-        assertTrue(objects.containsAll(Arrays.asList("hello", "world", "one", "two", "three", "four")));
+        assertTrue(objects.containsAll(values));
+
+        assertTrue(CACHE_TEMPLATE.sMembersAsync(key).join().containsAll(values));
 
         CACHE_TEMPLATE.del(key);
 
@@ -1359,6 +1824,7 @@ public class AppTest extends TestCase {
         assertTrue(b2);
 
         assertEquals(2, CACHE_TEMPLATE.sCard(key));
+        assertEquals(2, CACHE_TEMPLATE.sCardAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1373,6 +1839,7 @@ public class AppTest extends TestCase {
         assertTrue(b2);
 
         assertTrue(CACHE_TEMPLATE.sIsMember(key, "one"));
+        assertTrue(CACHE_TEMPLATE.sIsMemberAsync(key, "one").join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1391,6 +1858,8 @@ public class AppTest extends TestCase {
 
         final Set<Object> objects = CACHE_TEMPLATE.sDiff(key1, key2, key3);
         assertTrue(objects.containsAll(Arrays.asList("b", "d")));
+
+        assertTrue(CACHE_TEMPLATE.sDiffAsync(key1, key2, key3).join().containsAll(Arrays.asList("b", "d")));
 
         CACHE_TEMPLATE.del(key1, key2, key3);
 
@@ -1412,6 +1881,9 @@ public class AppTest extends TestCase {
         final int i = CACHE_TEMPLATE.sDiffStore(destKey, key1, key2, key3);
         assertEquals(2, i);
 
+        CACHE_TEMPLATE.del(destKey);
+        assertEquals(2, CACHE_TEMPLATE.sDiffStoreAsync(destKey, key1, key2, key3).join().intValue());
+
         CACHE_TEMPLATE.del(key1, key2, key3, destKey);
     }
 
@@ -1429,6 +1901,7 @@ public class AppTest extends TestCase {
 
         final Set<Object> objects = CACHE_TEMPLATE.sInter(key1, key2, key3);
         assertTrue(objects.contains("c"));
+        assertTrue(CACHE_TEMPLATE.sInterAsync(key1, key2, key3).join().contains("c"));
 
         CACHE_TEMPLATE.del(key1, key2, key3);
     }
@@ -1440,7 +1913,7 @@ public class AppTest extends TestCase {
         String key1 = "testSInterStore1";
         String key2 = "testSInterStore2";
         String key3 = "testSInterStore3";
-        String destKey = "testSInterStoredestKey";
+        String destKey = "testSInterStore-destKey";
 
         assertTrue(CACHE_TEMPLATE.sAdd(key1, Arrays.asList("a", "b", "c", "d")));
         assertTrue(CACHE_TEMPLATE.sAdd(key2, "c"));
@@ -1448,6 +1921,9 @@ public class AppTest extends TestCase {
 
         final int i = CACHE_TEMPLATE.sInterStore(destKey, key1, key2, key3);
         assertEquals(1, i);
+
+        CACHE_TEMPLATE.del(destKey);
+        assertEquals(1, CACHE_TEMPLATE.sInterStoreAsync(destKey, key1, key2, key3).join().intValue());
 
         CACHE_TEMPLATE.del(key1, key2, key3, destKey);
     }
@@ -1457,7 +1933,7 @@ public class AppTest extends TestCase {
      */
     public void testSMove() {
         String key = "testSMove";
-        String key2 = "testSMoveotherset";
+        String key2 = "testSMove-other-set";
 
         assertTrue(CACHE_TEMPLATE.sAdd(key, "one"));
         assertTrue(CACHE_TEMPLATE.sAdd(key, "two"));
@@ -1479,6 +1955,32 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test s move async.
+     */
+    public void testSMoveAsync() {
+        String key = "testSMoveAsync";
+        String key2 = "testSMoveAsync-other-set";
+
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "one"));
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "two"));
+
+        assertTrue(CACHE_TEMPLATE.sAdd(key2, "two"));
+        assertTrue(CACHE_TEMPLATE.sAdd(key2, "three"));
+
+        assertTrue(CACHE_TEMPLATE.sMoveAsync(key, key2, "one").join());
+        assertTrue(CACHE_TEMPLATE.sMoveAsync(key, key2, "two").join());
+        assertFalse(CACHE_TEMPLATE.sMoveAsync(key, key2, "four").join());
+
+        final Set<Object> objects = CACHE_TEMPLATE.sMembersAsync(key).join();
+        assertTrue(objects.isEmpty());
+
+        final Set<Object> objects1 = CACHE_TEMPLATE.sMembersAsync(key2).join();
+        assertTrue(objects1.containsAll(Arrays.asList("one", "two", "three")));
+
+        CACHE_TEMPLATE.del(key, key2);
+    }
+
+    /**
      * Test s pop.
      */
     public void testSPop() {
@@ -1491,13 +1993,37 @@ public class AppTest extends TestCase {
         assertTrue(CACHE_TEMPLATE.sAdd(key, "five"));
 
         assertTrue(CACHE_TEMPLATE.sPop(key).isPresent());
-        assertTrue(CACHE_TEMPLATE.sPop(key).isPresent());
+        assertNotNull(CACHE_TEMPLATE.sPopAsync(key).join());
         assertEquals(3, CACHE_TEMPLATE.sPop(key, 3).size());
 
         assertFalse(CACHE_TEMPLATE.sPop(key).isPresent());
         assertEquals(0, CACHE_TEMPLATE.sPop(key, 3).size());
 
         assertEquals(0, CACHE_TEMPLATE.sCard(key));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
+     * Test s pop async.
+     */
+    public void testSPopAsync() {
+        String key = "testSPopAsync";
+
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "one"));
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "two"));
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "three"));
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "four"));
+        assertTrue(CACHE_TEMPLATE.sAdd(key, "five"));
+
+        assertTrue(CACHE_TEMPLATE.sPop(key).isPresent());
+        assertTrue(CACHE_TEMPLATE.sPop(key).isPresent());
+        assertEquals(3, CACHE_TEMPLATE.sPopAsync(key, 3).join().size());
+
+        assertFalse(CACHE_TEMPLATE.sPop(key).isPresent());
+        assertEquals(0, CACHE_TEMPLATE.sPopAsync(key, 3).join().size());
+
+        assertEquals(0, CACHE_TEMPLATE.sCardAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1517,7 +2043,23 @@ public class AppTest extends TestCase {
         assertEquals(5, CACHE_TEMPLATE.sCard(key));
 
         CACHE_TEMPLATE.del(key);
+    }
 
+    /**
+     * Test s rand member async.
+     */
+    public void testSRandMemberAsync() {
+        String key = "testSRandMemberAsync";
+        final List<String> list = Arrays.asList("one", "two", "three", "four", "five");
+
+        assertTrue(CACHE_TEMPLATE.sAdd(key, list));
+
+        assertTrue(list.contains(CACHE_TEMPLATE.sRandMemberAsync(key).join()));
+        assertTrue(list.contains(CACHE_TEMPLATE.sRandMemberAsync(key).join()));
+        assertTrue(list.containsAll(CACHE_TEMPLATE.sRandMemberAsync(key, 4).join()));
+        assertEquals(5, CACHE_TEMPLATE.sCard(key));
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -1532,6 +2074,25 @@ public class AppTest extends TestCase {
         assertTrue(CACHE_TEMPLATE.sRem(key, Collections.singletonList("one")));
         assertTrue(CACHE_TEMPLATE.sRem(key, Arrays.asList("two", "four")));
         assertFalse(CACHE_TEMPLATE.sRem(key, Collections.singletonList("five")));
+
+        final Set<Object> objects = CACHE_TEMPLATE.sMembers(key);
+        assertTrue(objects.contains("three"));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
+     * Test s rem async.
+     */
+    public void testSRemAsync() {
+        String key = "testSRemAsync";
+        final List<String> list = Arrays.asList("one", "two", "three");
+
+        assertTrue(CACHE_TEMPLATE.sAdd(key, list));
+
+        assertTrue(CACHE_TEMPLATE.sRemAsync(key, Collections.singletonList("one")).join());
+        assertTrue(CACHE_TEMPLATE.sRemAsync(key, Arrays.asList("two", "four")).join());
+        assertFalse(CACHE_TEMPLATE.sRemAsync(key, Collections.singletonList("five")).join());
 
         final Set<Object> objects = CACHE_TEMPLATE.sMembers(key);
         assertTrue(objects.contains("three"));
@@ -1583,6 +2144,8 @@ public class AppTest extends TestCase {
         final Set<Object> objects = CACHE_TEMPLATE.sUnion(key1, key2, key3);
         assertTrue(objects.containsAll(Arrays.asList("a", "b", "c", "d", "e")));
 
+        assertTrue(CACHE_TEMPLATE.sUnionAsync(key1, key2, key3).join().containsAll(Arrays.asList("a", "b", "c", "d", "e")));
+
         CACHE_TEMPLATE.del(key1, key2, key3);
     }
 
@@ -1593,7 +2156,7 @@ public class AppTest extends TestCase {
         String key1 = "testSUnionStore1";
         String key2 = "testSUnionStore2";
         String key3 = "testSUnionStore3";
-        String destKey = "testSUnionStoredestKey";
+        String destKey = "testSUnionStore-destKey";
 
         assertTrue(CACHE_TEMPLATE.sAdd(key1, Arrays.asList("a", "b", "c", "d")));
         assertTrue(CACHE_TEMPLATE.sAdd(key2, "c"));
@@ -1601,6 +2164,9 @@ public class AppTest extends TestCase {
 
         final int i = CACHE_TEMPLATE.sUnionStore(destKey, key1, key2, key3);
         assertEquals(5, i);
+
+        CACHE_TEMPLATE.del(destKey);
+        assertEquals(5, CACHE_TEMPLATE.sUnionStoreAsync(destKey, key1, key2, key3).join().intValue());
 
         CACHE_TEMPLATE.del(key1, key2, key3, destKey);
     }
@@ -1639,7 +2205,7 @@ public class AppTest extends TestCase {
         final Collection<Object> objects1 = CACHE_TEMPLATE.bzmPop(key, false, 10);
         assertTrue(list.containsAll(objects1));
 
-        assertTrue(CACHE_TEMPLATE.zAdd(key2, 4D, "four"));
+        assertTrue(CACHE_TEMPLATE.zAddAsync(key2, 4D, "four").join());
         assertTrue(CACHE_TEMPLATE.zAdd(key2, 5D, "five"));
         assertTrue(CACHE_TEMPLATE.zAdd(key2, 6D, "six"));
 
@@ -1671,6 +2237,70 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test bzm pop async.
+     */
+    public void testBzmPopAsync() {
+        final Object optional = CACHE_TEMPLATE.bzmPopAsync(3, TimeUnit.SECONDS, "notsuchkey", true).join();
+        assertNull(optional);
+
+        String key = "testBzmPopAsync";
+        String key2 = "testBzmPopAsync2";
+
+        final int zAdd = CACHE_TEMPLATE.zAddAsync(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }}).join();
+        assertEquals(3, zAdd);
+
+        final Object optional2 = CACHE_TEMPLATE.bzmPopAsync(3, TimeUnit.SECONDS, key, true).join();
+        assertEquals("one", optional2.toString());
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zRangeAsync(key, 0, -1).join();
+        final List<String> list = new ArrayList<String>() {{
+            add("one");
+            add("two");
+            add("three");
+        }};
+        list.remove(optional2.toString());
+        assertTrue(objects.containsAll(list));
+
+        final Collection<Object> objects1 = CACHE_TEMPLATE.bzmPopAsync(key, false, 10).join();
+        assertTrue(list.containsAll(objects1));
+
+        assertTrue(CACHE_TEMPLATE.zAdd(key2, 4D, "four"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key2, 5D, "five"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key2, 6D, "six"));
+
+        final List<String> list2 = new ArrayList<String>() {{
+            add("four");
+            add("five");
+            add("six");
+        }};
+
+        final Object objects2 = CACHE_TEMPLATE.bzmPopAsync(3, TimeUnit.SECONDS, key, true, key2).join();
+        assertTrue(list2.contains(objects2));
+
+        final Collection<Object> objects3 = CACHE_TEMPLATE.zRange(key, 0, -1);
+        assertTrue(objects3.isEmpty());
+
+        final Object objects4 = CACHE_TEMPLATE.bzmPopAsync(3, TimeUnit.SECONDS, key, false, key2).join();
+        assertTrue(list2.contains(objects4));
+
+        final Object objects42 = CACHE_TEMPLATE.bzmPopAsync(3, TimeUnit.SECONDS, key, false, key2).join();
+        assertTrue(list2.contains(objects42));
+
+        final Collection<Object> objects5 = CACHE_TEMPLATE.zRange(key2, 0, -1);
+        assertTrue(objects5.isEmpty());
+
+        assertEquals(0, CACHE_TEMPLATE.existsAsync(key, key2).join().intValue());
+
+        CACHE_TEMPLATE.del(key, key2);
+
+    }
+
+
+    /**
      * Test bz pop max.
      */
     public void testBzPopMax() {
@@ -1687,6 +2317,30 @@ public class AppTest extends TestCase {
         assertEquals("three", optional.get());
 
         final Collection<Object> objects = CACHE_TEMPLATE.bzPopMax(key, 3);
+        assertTrue(objects.containsAll(Arrays.asList("one", "two")));
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+
+    /**
+     * Test bz pop max async.
+     */
+    public void testBzPopMaxAsync() {
+        String key = "testBzPopMaxAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Object optional = CACHE_TEMPLATE.bzPopMaxAsync(key, 3, TimeUnit.SECONDS).join();
+        assertEquals("three", optional);
+
+        final Collection<Object> objects = CACHE_TEMPLATE.bzPopMaxAsync(key, 3).join();
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
 
         CACHE_TEMPLATE.del(key);
@@ -1717,6 +2371,28 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test bz pop min async.
+     */
+    public void testBzPopMinAsync() {
+        String key = "testBzPopMinAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Object optional = CACHE_TEMPLATE.bzPopMinAsync(key, 3, TimeUnit.SECONDS).join();
+        assertEquals("one", optional);
+
+        final Collection<Object> objects = CACHE_TEMPLATE.bzPopMinAsync(key, 3).join();
+        assertTrue(objects.containsAll(Arrays.asList("three", "two")));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test z card.
      */
     public void testZCard() {
@@ -1729,6 +2405,7 @@ public class AppTest extends TestCase {
         assertEquals(2, zAdd);
 
         assertEquals(2, CACHE_TEMPLATE.zCard(key));
+        assertEquals(2, CACHE_TEMPLATE.zCardAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1739,11 +2416,11 @@ public class AppTest extends TestCase {
     public void testZCount() {
         String key = "testZCount";
 
-        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+        final int zAdd = CACHE_TEMPLATE.zAddAsync(key, new HashMap<Object, Double>() {{
             put("one", 1D);
             put("two", 2D);
             put("three", 3D);
-        }});
+        }}).join();
         assertEquals(3, zAdd);
 
         final int zCount = CACHE_TEMPLATE.zCount(key, Double.MIN_VALUE, true, Double.MAX_VALUE, true);
@@ -1751,6 +2428,9 @@ public class AppTest extends TestCase {
 
         final int zCount2 = CACHE_TEMPLATE.zCount(key, 1, false, 3, true);
         assertEquals(2, zCount2);
+
+        assertEquals(3, CACHE_TEMPLATE.zCountAsync(key, Double.MIN_VALUE, true, Double.MAX_VALUE, true).join().intValue());
+        assertEquals(2, CACHE_TEMPLATE.zCountAsync(key, 1, false, 3, true).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1777,6 +2457,7 @@ public class AppTest extends TestCase {
 
         final Collection<Object> objects = CACHE_TEMPLATE.zDiff(key, key2);
         assertTrue(objects.contains("three"));
+        assertTrue(CACHE_TEMPLATE.zDiffAsync(key, key2).join().contains("three"));
 
         CACHE_TEMPLATE.del(key, key2);
     }
@@ -1805,6 +2486,9 @@ public class AppTest extends TestCase {
         final int zDiffStore = CACHE_TEMPLATE.zDiffStore(key3, key, key2);
         assertEquals(1, zDiffStore);
 
+        CACHE_TEMPLATE.del(key3);
+        assertEquals(1, CACHE_TEMPLATE.zDiffStoreAsync(key3, key, key2).join().intValue());
+
         CACHE_TEMPLATE.del(key, key2, key3);
     }
 
@@ -1822,6 +2506,9 @@ public class AppTest extends TestCase {
 
         final Double zIncrBy = CACHE_TEMPLATE.zIncrBy(key, 2, "one");
         assertEquals(3.0, zIncrBy);
+
+        assertEquals(1.0, CACHE_TEMPLATE.zIncrByAsync(key, -2, "one").join());
+        assertEquals(4.0, CACHE_TEMPLATE.zIncrByAsync(key, 2, "two").join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1849,6 +2536,8 @@ public class AppTest extends TestCase {
         final Collection<Object> objects = CACHE_TEMPLATE.zInter(key1, key2);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
 
+        assertTrue(CACHE_TEMPLATE.zInterAsync(key1, key2).join().containsAll(Arrays.asList("one", "two")));
+
         CACHE_TEMPLATE.del(key1, key2);
 
     }
@@ -1859,7 +2548,7 @@ public class AppTest extends TestCase {
     public void testZInterStore() {
         String key1 = "testZInterStore1";
         String key2 = "testZInterStore2";
-        String dest = "testZInterStoreout";
+        String dest = "testZInterStore-out";
 
         final int zAdd2 = CACHE_TEMPLATE.zAdd(key1, new HashMap<Object, Double>() {{
             put("one", 1D);
@@ -1880,12 +2569,25 @@ public class AppTest extends TestCase {
         }});
         assertEquals(2, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        final int zInterStore2 = CACHE_TEMPLATE.zInterStoreAsync(dest, new HashMap<String, Double>() {{
+            put(key1, 2.0);
+            put(key2, 3.0);
+        }}).join();
+        assertEquals(2, zInterStore2);
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
+        assertTrue(CACHE_TEMPLATE.zRangeAsync(dest, 0, -1).join().containsAll(Arrays.asList("one", "two")));
+
 
         final List<Double> doubles = CACHE_TEMPLATE.zScore(dest, new ArrayList<>(objects));
         assertEquals(5.0, doubles.get(0));
         assertEquals(10.0, doubles.get(1));
+
+        final List<Double> doubles2 = CACHE_TEMPLATE.zScoreAsync(dest, new ArrayList<>(objects)).join();
+        assertEquals(5.0, doubles2.get(0));
+        assertEquals(10.0, doubles2.get(1));
 
         CACHE_TEMPLATE.del(key1, key2, dest);
     }
@@ -1913,6 +2615,9 @@ public class AppTest extends TestCase {
 
         final int zInterStore = CACHE_TEMPLATE.zInterStore(dest, key1, key2);
         assertEquals(2, zInterStore);
+
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(2, CACHE_TEMPLATE.zInterStoreAsync(dest, key1, key2).join().intValue());
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
@@ -1948,6 +2653,9 @@ public class AppTest extends TestCase {
         final int zInterStore = CACHE_TEMPLATE.zInterStoreAggregate(dest, "min", key1, key2);
         assertEquals(2, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(2, CACHE_TEMPLATE.zInterStoreAggregateAsync(dest, "min", key1, key2).join().intValue());
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
 
@@ -1981,6 +2689,10 @@ public class AppTest extends TestCase {
 
         final int zInterStore = CACHE_TEMPLATE.zInterStoreAggregate(dest, "max", key1, key2);
         assertEquals(2, zInterStore);
+
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(2, CACHE_TEMPLATE.zInterStoreAggregateAsync(dest, "max", key1, key2).join().intValue());
+
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
@@ -2019,6 +2731,14 @@ public class AppTest extends TestCase {
         }});
         assertEquals(2, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(2,
+                CACHE_TEMPLATE.zInterStoreAsync(dest, "min", new HashMap<String, Double>() {{
+                    put(key1, 2.0);
+                    put(key2, 3.0);
+                }}).join().intValue()
+        );
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
 
@@ -2056,6 +2776,14 @@ public class AppTest extends TestCase {
         }});
         assertEquals(2, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(2,
+                CACHE_TEMPLATE.zInterStoreAsync(dest, "max", new HashMap<String, Double>() {{
+                    put(key1, 2.0);
+                    put(key2, 3.0);
+                }}).join().intValue()
+        );
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
 
@@ -2089,8 +2817,11 @@ public class AppTest extends TestCase {
         final int zLexCountTail = CACHE_TEMPLATE.zLexCountTail(key, "c", false);
         assertEquals(4, zLexCountTail);
 
-        CACHE_TEMPLATE.del(key);
+        assertEquals(7, CACHE_TEMPLATE.zLexCountHeadAsync(key, "g", true).join().intValue());
+        assertEquals(5, CACHE_TEMPLATE.zLexCountAsync(key, "b", true, "f", true).join().intValue());
+        assertEquals(4, CACHE_TEMPLATE.zLexCountTailAsync(key, "c", false).join().intValue());
 
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -2101,9 +2832,7 @@ public class AppTest extends TestCase {
         assertFalse(optional.isPresent());
 
         String key = "testZmPop";
-        String key2 = "testZmPop2";
-
-        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new LinkedHashMap<Object, Double>() {{
             put("one", 1D);
             put("two", 2D);
             put("three", 3D);
@@ -2111,32 +2840,23 @@ public class AppTest extends TestCase {
         assertEquals(3, zAdd);
 
         final Optional<Object> optional2 = CACHE_TEMPLATE.zmPop(key, true);
-        assertTrue(optional2.isPresent());
+        assertEquals("one", optional2.get());
+        final Optional<Object> optional3 = CACHE_TEMPLATE.zmPop(key, false);
+        assertEquals("three", optional3.get());
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
-        final List<String> list = new ArrayList<String>() {{
-            add("one");
-            add("two");
-            add("three");
-        }};
-        list.remove(optional2.get().toString());
-        assertTrue(objects.containsAll(list));
+        assertEquals("two", objects.iterator().next());
 
+        String key2 = "testZmPop2";
         assertTrue(CACHE_TEMPLATE.zAdd(key2, 4D, "four"));
         assertTrue(CACHE_TEMPLATE.zAdd(key2, 5D, "five"));
         assertTrue(CACHE_TEMPLATE.zAdd(key2, 6D, "six"));
 
-        final List<String> list2 = new ArrayList<String>() {{
-            add("four");
-            add("five");
-            add("six");
-        }};
-
         CACHE_TEMPLATE.zmPop(key, true);
-        CACHE_TEMPLATE.zmPop(key, true);
+        CACHE_TEMPLATE.zmPop(key, false);
 
         final Optional<Object> objects2 = CACHE_TEMPLATE.zmPop(key, true, 10, TimeUnit.SECONDS, key2);
-        assertTrue(list2.contains(objects2.get()));
+        assertEquals("four", objects2.get());
 
         final Collection<Object> objects3 = CACHE_TEMPLATE.zRange(key, 0, -1);
         assertTrue(objects3.isEmpty());
@@ -2151,6 +2871,57 @@ public class AppTest extends TestCase {
         assertTrue(objects5.isEmpty());
 
         assertEquals(0, CACHE_TEMPLATE.exists(key, key2));
+
+        CACHE_TEMPLATE.del(key, key2);
+    }
+
+    /**
+     * Test zm pop async.
+     */
+    public void testZmPopAsync() {
+        final Optional<Object> optional = CACHE_TEMPLATE.zmPop("notsuchkey", true);
+        assertFalse(optional.isPresent());
+
+        String key = "testZmPopAsync";
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new LinkedHashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Object optional2 = CACHE_TEMPLATE.zmPopAsync(key, true).join();
+        assertEquals("one", optional2);
+        final Object optional3 = CACHE_TEMPLATE.zmPopAsync(key, false).join();
+        assertEquals("three", optional3);
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zRangeAsync(key, 0, -1).join();
+        assertEquals("two", objects.iterator().next());
+
+        String key2 = "testZmPop2";
+        assertTrue(CACHE_TEMPLATE.zAdd(key2, 4D, "four"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key2, 5D, "five"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key2, 6D, "six"));
+
+        CACHE_TEMPLATE.zmPop(key, true);
+        CACHE_TEMPLATE.zmPop(key, false);
+
+        final Object objects2 = CACHE_TEMPLATE.zmPopAsync(key, true, 10, TimeUnit.SECONDS, key2).join();
+        assertEquals("four", objects2);
+
+        final Collection<Object> objects3 = CACHE_TEMPLATE.zRangeAsync(key, 0, -1).join();
+        assertTrue(objects3.isEmpty());
+
+        final Object objects4 = CACHE_TEMPLATE.zmPopAsync(key, false, 10, TimeUnit.SECONDS, key2).join();
+        assertNotNull(objects4);
+
+        final Object objects42 = CACHE_TEMPLATE.zmPopAsync(key, false, 10, TimeUnit.SECONDS, key2).join();
+        assertNotNull(objects42);
+
+        final Collection<Object> objects5 = CACHE_TEMPLATE.zRangeAsync(key2, 0, -1).join();
+        assertTrue(objects5.isEmpty());
+
+        assertEquals(0, CACHE_TEMPLATE.existsAsync(key, key2).join().intValue());
 
         CACHE_TEMPLATE.del(key, key2);
     }
@@ -2172,6 +2943,28 @@ public class AppTest extends TestCase {
         assertEquals("three", optional.get());
 
         final Collection<Object> objects = CACHE_TEMPLATE.zPopMax(key, 3);
+        assertTrue(objects.containsAll(Arrays.asList("one", "two")));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
+     * Test z pop max async.
+     */
+    public void testZPopMaxAsync() {
+        String key = "testZPopMaxAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Object optional = CACHE_TEMPLATE.zPopMaxAsync(key).join();
+        assertEquals("three", optional);
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zPopMaxAsync(key, 3).join();
         assertTrue(objects.containsAll(Arrays.asList("one", "two")));
 
         CACHE_TEMPLATE.del(key);
@@ -2200,10 +2993,32 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test z pop min async.
+     */
+    public void testZPopMinAsync() {
+        String key = "testZPopMinAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Object optional = CACHE_TEMPLATE.zPopMinAsync(key).join();
+        assertEquals("one", optional);
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zPopMinAsync(key, 3).join();
+        assertTrue(objects.containsAll(Arrays.asList("three", "two")));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test z rand member.
      */
     public void testZRandMember() {
-        String key = "dadid";
+        String key = "testZRandMember";
 
         final List<String> list = Arrays.asList("uno", "due", "tre", "quattro", "cinque", "sei");
 
@@ -2218,9 +3033,17 @@ public class AppTest extends TestCase {
         assertTrue(list.contains(CACHE_TEMPLATE.zRandMember(key).get()));
         assertTrue(list.contains(CACHE_TEMPLATE.zRandMember(key).get()));
 
+        assertTrue(list.contains(CACHE_TEMPLATE.zRandMemberAsync(key).join()));
+        assertTrue(list.contains(CACHE_TEMPLATE.zRandMemberAsync(key).join()));
+        assertTrue(list.contains(CACHE_TEMPLATE.zRandMemberAsync(key).join()));
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRandMember(key, 5);
         assertEquals(5, objects.size());
         assertTrue(list.containsAll(objects));
+
+        final Collection<Object> objects2 = CACHE_TEMPLATE.zRandMemberAsync(key, 5).join();
+        assertEquals(5, objects2.size());
+        assertTrue(list.containsAll(objects2));
 
         CACHE_TEMPLATE.del(key);
 
@@ -2244,8 +3067,15 @@ public class AppTest extends TestCase {
         assertEquals("two", objects1.get(0));
         assertEquals("three", objects1.get(1));
 
-        final Collection<Object> objects2 = CACHE_TEMPLATE.zRange(key, 1.0, false, Double.MAX_VALUE, true, 1, 1);
+        final ArrayList<Object> objects13 = new ArrayList<>(CACHE_TEMPLATE.zRangeAsync(key, 1.0, false, Double.MAX_VALUE, true).join());
+        assertEquals("two", objects13.get(0));
+        assertEquals("three", objects13.get(1));
+
+        final Collection<Object> objects2 = CACHE_TEMPLATE.zRangeAsync(key, 1.0, false, Double.MAX_VALUE, true, 1, 1).join();
         assertEquals("three", objects2.iterator().next());
+
+        final Collection<Object> objects23 = CACHE_TEMPLATE.zRange(key, 1.0, false, Double.MAX_VALUE, true, 1, 1);
+        assertEquals("three", objects23.iterator().next());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2278,7 +3108,36 @@ public class AppTest extends TestCase {
         assertEquals("two", objects2.iterator().next());
 
         CACHE_TEMPLATE.del(key);
+    }
 
+    /**
+     * Test z range reversed async.
+     */
+    public void testZRangeReversedAsync() {
+        String key = "testZRangeReversedAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAddAsync(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }}).join();
+        assertEquals(3, zAdd);
+
+        final Collection<Object> objects1 = CACHE_TEMPLATE.zRangeReversedAsync(key, 0, -1).join();
+        final ArrayList<Object> objects3 = new ArrayList<>(objects1);
+        assertEquals("three", objects3.get(0));
+        assertEquals("two", objects3.get(1));
+        assertEquals("one", objects3.get(2));
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zRangeReversedAsync(key, 1.0, false, Double.MAX_VALUE, true).join();
+        final ArrayList<Object> objects4 = new ArrayList<>(objects);
+        assertEquals("three", objects4.get(0));
+        assertEquals("two", objects4.get(1));
+
+        final Collection<Object> objects2 = CACHE_TEMPLATE.zRangeReversedAsync(key, 1.0, false, Double.MAX_VALUE, true, 1, 1).join();
+        assertEquals("two", objects2.iterator().next());
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -2296,9 +3155,11 @@ public class AppTest extends TestCase {
 
         final Optional<Integer> three = CACHE_TEMPLATE.zRank(key, "three");
         assertEquals(2, three.get().intValue());
+        assertEquals(2, CACHE_TEMPLATE.zRankAsync(key, "three").join().intValue());
 
         final Optional<Integer> four = CACHE_TEMPLATE.zRank(key, "four");
         assertFalse(four.isPresent());
+        assertNull(CACHE_TEMPLATE.zRankAsync(key, "four").join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2318,6 +3179,9 @@ public class AppTest extends TestCase {
 
         final boolean b = CACHE_TEMPLATE.zRem(key, Collections.singletonList("two"));
         assertTrue(b);
+
+        CACHE_TEMPLATE.zAddAsync(key, 2D, "two").join();
+        assertTrue(CACHE_TEMPLATE.zRemAsync(key, Collections.singletonList("two")).join());
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
         assertTrue(objects.containsAll(Arrays.asList("one", "three")));
@@ -2370,6 +3234,50 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test z rem range by lex async.
+     */
+    public void testZRemRangeByLexAsync() {
+        String key = "testZRemRangeByLexAsync";
+
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "aaaa"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "b"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "c"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "d"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "e"));
+
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "foo"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "zap"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "zip"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "ALPHA"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "alpha"));
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
+        final ArrayList<Object> objects1 = new ArrayList<>(objects);
+        assertEquals("ALPHA", objects1.get(0));
+        assertEquals("aaaa", objects1.get(1));
+        assertEquals("alpha", objects1.get(2));
+        assertEquals("b", objects1.get(3));
+        assertEquals("c", objects1.get(4));
+        assertEquals("d", objects1.get(5));
+        assertEquals("e", objects1.get(6));
+        assertEquals("foo", objects1.get(7));
+        assertEquals("zap", objects1.get(8));
+        assertEquals("zip", objects1.get(9));
+
+        final Integer optional = CACHE_TEMPLATE.zRemRangeByLexAsync(key, "alpha", true, "omega", true).join();
+        assertEquals(6, optional.intValue());
+
+        final Collection<Object> objects2 = CACHE_TEMPLATE.zRange(key, 0, -1);
+        final ArrayList<Object> objects3 = new ArrayList<>(objects2);
+        assertEquals("ALPHA", objects3.get(0));
+        assertEquals("aaaa", objects3.get(1));
+        assertEquals("zap", objects3.get(2));
+        assertEquals("zip", objects3.get(3));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test z rem range by rank.
      */
     public void testZRemRangeByRank() {
@@ -2384,6 +3292,28 @@ public class AppTest extends TestCase {
 
         final Optional<Integer> optional = CACHE_TEMPLATE.zRemRangeByRank(key, 0, 1);
         assertEquals(2, optional.get().intValue());
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
+        assertTrue(objects.contains("three"));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
+     * Test z rem range by rank async.
+     */
+    public void testZRemRangeByRankAsync() {
+        String key = "testZRemRangeByRankAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Integer optional = CACHE_TEMPLATE.zRemRangeByRankAsync(key, 0, 1).join();
+        assertEquals(2, optional.intValue());
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
         assertTrue(objects.contains("three"));
@@ -2414,6 +3344,28 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test z rem range by score async.
+     */
+    public void testZRemRangeByScoreAsync() {
+        String key = "testZRemRangeByScoreAsync";
+
+        final int zAdd = CACHE_TEMPLATE.zAdd(key, new HashMap<Object, Double>() {{
+            put("one", 1D);
+            put("two", 2D);
+            put("three", 3D);
+        }});
+        assertEquals(3, zAdd);
+
+        final Integer optional = CACHE_TEMPLATE.zRemRangeByScoreAsync(key, Double.MIN_VALUE, true, 2, false).join();
+        assertEquals(1, optional.intValue());
+
+        final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
+        assertTrue(objects.containsAll(Arrays.asList("three", "two")));
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test z rev rank.
      */
     public void testZRevRank() {
@@ -2429,8 +3381,8 @@ public class AppTest extends TestCase {
         final Optional<Integer> integer = CACHE_TEMPLATE.zRevRank(key, "one");
         assertEquals(2, integer.get().intValue());
 
-        final Optional<Integer> integer2 = CACHE_TEMPLATE.zRevRank(key, "two");
-        assertEquals(1, integer2.get().intValue());
+        final Integer integer2 = CACHE_TEMPLATE.zRevRankAsync(key, "two").join();
+        assertEquals(1, integer2.intValue());
 
         final Optional<Integer> integer3 = CACHE_TEMPLATE.zRevRank(key, "three");
         assertEquals(0, integer3.get().intValue());
@@ -2493,6 +3445,7 @@ public class AppTest extends TestCase {
 
         final Collection<Object> objects = CACHE_TEMPLATE.zUnion(key1, key2);
         assertTrue(objects.containsAll(Arrays.asList("one", "two", "three")));
+        assertTrue(CACHE_TEMPLATE.zUnionAsync(key1, key2).join().containsAll(Arrays.asList("one", "two", "three")));
 
         CACHE_TEMPLATE.del(key1, key2);
     }
@@ -2523,6 +3476,14 @@ public class AppTest extends TestCase {
             put(key2, 3.0);
         }});
         assertEquals(3, zInterStore);
+
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(3,
+                CACHE_TEMPLATE.zUnionStoreAsync(dest, new HashMap<String, Double>() {{
+                    put(key1, 2.0);
+                    put(key2, 3.0);
+                }}).join().intValue()
+        );
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
@@ -2562,6 +3523,9 @@ public class AppTest extends TestCase {
         final int zInterStore = CACHE_TEMPLATE.zUnionStore(dest, key1, key2);
         assertEquals(3, zInterStore);
 
+        CACHE_TEMPLATE.delAsync(dest).join();
+        assertEquals(3, CACHE_TEMPLATE.zUnionStoreAsync(dest, key1, key2).join().intValue());
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
         assertEquals("one", objects1.get(0));
@@ -2600,6 +3564,9 @@ public class AppTest extends TestCase {
         final int zInterStore = CACHE_TEMPLATE.zUnionStoreAggregate(dest, "min", key1, key2);
         assertEquals(3, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(3, CACHE_TEMPLATE.zUnionStoreAggregateAsync(dest, "min", key1, key2).join().intValue());
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
         assertEquals("one", objects1.get(0));
@@ -2637,6 +3604,9 @@ public class AppTest extends TestCase {
 
         final int zInterStore = CACHE_TEMPLATE.zUnionStoreAggregate(dest, "max", key1, key2);
         assertEquals(3, zInterStore);
+
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(3, CACHE_TEMPLATE.zUnionStoreAggregateAsync(dest, "max", key1, key2).join().intValue());
 
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
@@ -2679,6 +3649,14 @@ public class AppTest extends TestCase {
         }});
         assertEquals(3, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(3,
+                CACHE_TEMPLATE.zUnionStoreAsync(dest, "min", new HashMap<String, Double>() {{
+                    put(key1, 2.0);
+                    put(key2, 3.0);
+                }}).join().intValue()
+        );
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
         assertEquals("one", objects1.get(0));
@@ -2720,6 +3698,14 @@ public class AppTest extends TestCase {
         }});
         assertEquals(3, zInterStore);
 
+        CACHE_TEMPLATE.del(dest);
+        assertEquals(3,
+                CACHE_TEMPLATE.zUnionStoreAsync(dest, "max", new HashMap<String, Double>() {{
+                    put(key1, 2.0);
+                    put(key2, 3.0);
+                }}).join().intValue()
+        );
+
         final Collection<Object> objects = CACHE_TEMPLATE.zRange(dest, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
         assertEquals("three", objects1.get(0));
@@ -2735,10 +3721,10 @@ public class AppTest extends TestCase {
     }
 
 
-    // hyberloglog
-
     /**
      * Test pf add.
+     * <p>
+     * hyberloglog
      */
     public void testPfAdd() {
         String key = "hll";
@@ -2746,6 +3732,11 @@ public class AppTest extends TestCase {
         final boolean b = CACHE_TEMPLATE.pfAdd(key, Arrays.asList("a", "b", "c", "d", "e", "f", "g"));
         assertTrue(b);
         assertEquals(7, CACHE_TEMPLATE.pfCount(key));
+
+        CACHE_TEMPLATE.del(key);
+
+        assertTrue(CACHE_TEMPLATE.pfAddAsync(key, Arrays.asList("a", "b", "c", "d", "e", "f", "g")).join());
+        assertEquals(7, CACHE_TEMPLATE.pfCountAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2770,6 +3761,7 @@ public class AppTest extends TestCase {
         assertTrue(b3);
 
         assertEquals(6, CACHE_TEMPLATE.pfCount(key, key1));
+        assertEquals(6, CACHE_TEMPLATE.pfCountAsync(key, key1).join().intValue());
 
         CACHE_TEMPLATE.del(key, key1);
     }
@@ -2781,29 +3773,31 @@ public class AppTest extends TestCase {
         String key1 = "hll1";
         String key2 = "hll2";
         String key3 = "hll3";
+        String key4 = "hll4";
 
         CACHE_TEMPLATE.pfAdd(key1, Arrays.asList("foo", "bar", "zap", "a"));
         CACHE_TEMPLATE.pfAdd(key2, Arrays.asList("a", "b", "c", "foo"));
 
         CACHE_TEMPLATE.pfMerge(key3, key1, key2);
+        CACHE_TEMPLATE.pfMergeAsync(key4, key1, key2).join();
+
         assertEquals(6, CACHE_TEMPLATE.pfCount(key3));
+        assertEquals(6, CACHE_TEMPLATE.pfCountAsync(key4).join().intValue());
 
-        CACHE_TEMPLATE.del(key1, key2, key3);
+        CACHE_TEMPLATE.del(key1, key2, key3, key4);
     }
-
-    // string
 
     /**
      * Test append.
+     * string
      */
     public void testAppend() {
-        String key = "mykeyappend";
+        String key = "my-key-append";
 
         CACHE_TEMPLATE.append(key, "Hello");
         CACHE_TEMPLATE.append(key, " World");
-
         assertEquals("Hello World", CACHE_TEMPLATE.get(key).orElse(null));
-
+        assertEquals("Hello World", CACHE_TEMPLATE.getAsync(key).join());
         CACHE_TEMPLATE.del(key);
     }
 
@@ -2811,9 +3805,10 @@ public class AppTest extends TestCase {
      * Test decr.
      */
     public void testDecr() {
-        String key = "mykeydesr";
+        String key = "my-key-desr";
 
         assertEquals(-1, CACHE_TEMPLATE.decr(key));
+        assertEquals(-2, CACHE_TEMPLATE.decrAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2822,10 +3817,12 @@ public class AppTest extends TestCase {
      * Test decr by.
      */
     public void testDecrBy() {
-        String key = "mykeydescbr";
+        String key = "my-key-desc-br";
 
         assertEquals(-10, CACHE_TEMPLATE.decrBy(key, 10));
         assertEquals(0, CACHE_TEMPLATE.decrBy(key, -10));
+        assertEquals(-10, CACHE_TEMPLATE.decrByAsync(key, 10).join().intValue());
+        assertEquals(0, CACHE_TEMPLATE.decrByAsync(key, -10).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2834,14 +3831,20 @@ public class AppTest extends TestCase {
      * Test get del.
      */
     public void testGetDel() {
-        String key = "mykey";
+        String key = "testGetDel";
 
-        CACHE_TEMPLATE.set(key, "hello");
-        final Optional<Object> optional = CACHE_TEMPLATE.getDel(key);
-        assertEquals("hello", optional.get());
+        CACHE_TEMPLATE.setObject(key, "hello");
+        assertEquals("hello", CACHE_TEMPLATE.getDel(key).get());
         assertFalse(1 == CACHE_TEMPLATE.exists(key));
 
         CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.setObjectAsync(key, "hello").join();
+        assertEquals("hello", CACHE_TEMPLATE.getDelAsync(key).join().toString());
+        assertFalse(1 == CACHE_TEMPLATE.existsAsync(key).join());
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
     /**
@@ -2884,9 +3887,10 @@ public class AppTest extends TestCase {
      * Test incr.
      */
     public void testIncr() {
-        String key = "mykey";
+        String key = "testIncr";
 
         assertEquals(1, CACHE_TEMPLATE.incr(key));
+        assertEquals(2, CACHE_TEMPLATE.incrAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2895,10 +3899,12 @@ public class AppTest extends TestCase {
      * Test incr by.
      */
     public void testIncrBy() {
-        String key = "mykey";
+        String key = "testIncrBy";
 
         assertEquals(10, CACHE_TEMPLATE.incrBy(key, 10));
         assertEquals(0, CACHE_TEMPLATE.incrBy(key, -10));
+        assertEquals(10, CACHE_TEMPLATE.incrByAsync(key, 10).join().intValue());
+        assertEquals(0, CACHE_TEMPLATE.incrByAsync(key, -10).join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2907,10 +3913,12 @@ public class AppTest extends TestCase {
      * Test incr by float.
      */
     public void testIncrByFloat() {
-        String key = "mykeyFloat";
+        String key = "testIncrByFloat";
 
         assertEquals(10.01D, CACHE_TEMPLATE.incrByFloat(key, 10.01D));
         assertEquals(0.0, CACHE_TEMPLATE.incrByFloat(key, -10.01D));
+        assertEquals(10.01D, CACHE_TEMPLATE.incrByFloatAsync(key, 10.01D).join());
+        assertEquals(0.0, CACHE_TEMPLATE.incrByFloatAsync(key, -10.01D).join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -2919,12 +3927,13 @@ public class AppTest extends TestCase {
      * Test compare and set.
      */
     public void testCompareAndSet() {
-        String key = "mykeyCompareAndSet";
+        String key = "testCompareAndSet";
 
         CACHE_TEMPLATE.incr(key);
         assertFalse(CACHE_TEMPLATE.compareAndSet(key, 0, 2));
         assertTrue(CACHE_TEMPLATE.compareAndSet(key, 1, 3));
         assertEquals(3, CACHE_TEMPLATE.getLong(key));
+        assertEquals(3, CACHE_TEMPLATE.getLongAsync(key).join().longValue());
 
         CACHE_TEMPLATE.del(key);
 
@@ -2932,6 +3941,7 @@ public class AppTest extends TestCase {
         assertFalse(CACHE_TEMPLATE.compareAndSet(key, 0.0, 2.0));
         assertTrue(CACHE_TEMPLATE.compareAndSet(key, 1.0, 3.0));
         assertEquals(3.0, CACHE_TEMPLATE.getDouble(key));
+        assertEquals(3.0, CACHE_TEMPLATE.getDoubleAsync(key).join());
 
         CACHE_TEMPLATE.del(key);
 
@@ -2944,21 +3954,135 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test compare and set async.
+     */
+    public void testCompareAndSetAsync() {
+        String key = "testCompareAndSetAsync";
+
+        CACHE_TEMPLATE.incr(key);
+        assertFalse(CACHE_TEMPLATE.compareAndSetAsync(key, 0, 2).join());
+        assertTrue(CACHE_TEMPLATE.compareAndSetAsync(key, 1, 3).join());
+        assertEquals(3, CACHE_TEMPLATE.getLong(key));
+
+        CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.incrByFloat(key, 1);
+        assertFalse(CACHE_TEMPLATE.compareAndSetAsync(key, 0.0, 2.0).join());
+        assertTrue(CACHE_TEMPLATE.compareAndSetAsync(key, 1.0, 3.0).join());
+        assertEquals(3.0, CACHE_TEMPLATE.getDouble(key));
+
+        CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.set(key, "foo");
+        assertFalse(CACHE_TEMPLATE.compareAndSetAsync(key, "hello", "world").join());
+        assertTrue(CACHE_TEMPLATE.compareAndSetAsync(key, "foo", "bar").join());
+        assertEquals("bar", CACHE_TEMPLATE.get(key).get());
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test m get.
      */
     public void testMGet() {
         String key1 = "key1";
         String key2 = "key2";
 
-        CACHE_TEMPLATE.set(key1, "Hello");
-        CACHE_TEMPLATE.set(key2, "World");
+        CACHE_TEMPLATE.setObject(key1, "Hello");
+        CACHE_TEMPLATE.setObject(key2, "World");
 
         final Map<String, Object> map = CACHE_TEMPLATE.mGet(key1, key2, "nonexisting");
         assertEquals("Hello", map.get(key1));
         assertEquals("World", map.get(key2));
         assertNull(map.get("nonexisting"));
 
+        final Map<String, Object> map2 = CACHE_TEMPLATE.mGetAsync(key1, key2, "nonexisting").join();
+        assertEquals("Hello", map2.get(key1));
+        assertEquals("World", map2.get(key2));
+        assertNull(map2.get("nonexisting"));
+
         CACHE_TEMPLATE.del(key1, key2);
+    }
+
+    /**
+     * Test set.
+     */
+    public void testSet() {
+        String key1 = "testSet1";
+        String key2 = "testSet2";
+        String key3 = "testSet3";
+        String key4 = "testSet4";
+        String key5 = "testSet5";
+        String key6 = "testSet6";
+
+        CACHE_TEMPLATE.setObject(key1, "Hello");
+        CACHE_TEMPLATE.setObject(key2, 1L);
+        CACHE_TEMPLATE.setObject(key3, 2.0D);
+        final ArrayList<String> strings = new ArrayList<>();
+        strings.add("hello");
+        strings.add("world");
+        CACHE_TEMPLATE.setObject(key4, strings);
+        CACHE_TEMPLATE.setObject(key5, 5);
+        CACHE_TEMPLATE.setObject(key6, 6.0F);
+
+        assertEquals("Hello", CACHE_TEMPLATE.get(key1).get());
+        assertEquals("Hello", CACHE_TEMPLATE.getObject(key1).get());
+        assertEquals("Hello", CACHE_TEMPLATE.getAsync(key1).join());
+        assertEquals("Hello", CACHE_TEMPLATE.getObjectAsync(key1).join());
+
+        assertEquals(1L, CACHE_TEMPLATE.getLong(key2));
+        assertEquals(1L, Long.parseLong(CACHE_TEMPLATE.getObject(key2).get().toString()));
+        assertEquals(1L, CACHE_TEMPLATE.getLongAsync(key2).join().longValue());
+        assertEquals(1L, Long.parseLong(CACHE_TEMPLATE.getObjectAsync(key2).join().toString()));
+
+        assertEquals(2.0D, CACHE_TEMPLATE.getDouble(key3));
+        assertEquals(2.0D, Double.parseDouble(CACHE_TEMPLATE.getObject(key3).get().toString()));
+        assertEquals(2.0D, CACHE_TEMPLATE.getDoubleAsync(key3).join());
+        assertEquals(2.0D, Double.parseDouble(CACHE_TEMPLATE.getObjectAsync(key3).join().toString()));
+
+        List<String> list = (List<String>) CACHE_TEMPLATE.getObject(key4).get();
+        assertEquals(2, list.size());
+
+        List<String> list2 = (List<String>) CACHE_TEMPLATE.getObjectAsync(key4).join();
+        assertEquals(2, list2.size());
+
+        assertEquals(5, CACHE_TEMPLATE.getLong(key5));
+        assertEquals(5, Integer.parseInt(CACHE_TEMPLATE.getObject(key5).get().toString()));
+        assertEquals(5, CACHE_TEMPLATE.getLongAsync(key5).join().intValue());
+        assertEquals(5, Integer.parseInt(CACHE_TEMPLATE.getObjectAsync(key5).join().toString()));
+
+        assertEquals(6.0F, (float) CACHE_TEMPLATE.getDouble(key6));
+        assertEquals(6.0F, Float.parseFloat(CACHE_TEMPLATE.getObject(key6).get().toString()));
+        assertEquals(6.0F, CACHE_TEMPLATE.getDoubleAsync(key6).join().floatValue());
+        assertEquals(6.0F, Float.parseFloat(CACHE_TEMPLATE.getObjectAsync(key6).join().toString()));
+
+        CACHE_TEMPLATE.del(key1, key2, key3, key4, key5, key6);
+    }
+
+    /**
+     * Test set async.
+     */
+    public void testSetAsync() {
+        String key1 = "testSetAsync1";
+        String key2 = "testSetAsync2";
+        String key3 = "testSetAsync3";
+        String key4 = "testSetAsync4";
+
+        CACHE_TEMPLATE.setAsync(key1, "Hello").join();
+        CACHE_TEMPLATE.setAsync(key2, 1L).join();
+        CACHE_TEMPLATE.setAsync(key3, 2.0D).join();
+        final ArrayList<String> strings = new ArrayList<>();
+        strings.add("hello");
+        strings.add("world");
+        CACHE_TEMPLATE.setObjectAsync(key4, strings).join();
+
+        assertEquals("Hello", CACHE_TEMPLATE.getAsync(key1).join());
+        assertEquals(1L, CACHE_TEMPLATE.getLongAsync(key2).join().longValue());
+        assertEquals(2.0D, CACHE_TEMPLATE.getDoubleAsync(key3).join());
+        List<String> list = (List<String>) CACHE_TEMPLATE.getObjectAsync(key4).join();
+        assertTrue(list.containsAll(Arrays.asList("hello", "world")));
+
+        CACHE_TEMPLATE.del(key1, key2, key3, key4);
     }
 
     /**
@@ -2977,6 +4101,17 @@ public class AppTest extends TestCase {
         assertEquals("Hello", map.get(key1));
         assertEquals("World", map.get(key2));
         assertNull(map.get("nonexisting"));
+
+        CACHE_TEMPLATE.del(key1, key2);
+        CACHE_TEMPLATE.mSetAsync(new HashMap<String, String>() {{
+            put(key1, "Hello");
+            put(key2, "World");
+        }}).join();
+
+        final Map<String, Object> map2 = CACHE_TEMPLATE.mGetAsync(key1, key2, "nonexisting").join();
+        assertEquals("Hello", map2.get(key1));
+        assertEquals("World", map2.get(key2));
+        assertNull(map2.get("nonexisting"));
 
         CACHE_TEMPLATE.del(key1, key2);
     }
@@ -3005,14 +4140,51 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test m set nx async.
+     */
+    public void testMSetNxAsync() {
+        String key1 = "testMSetNxAsync1";
+        String key2 = "testMSetNxAsync2";
+
+        final boolean msetnx = CACHE_TEMPLATE.mSetNXAsync(new HashMap<String, String>() {{
+            put(key1, "Hello");
+            put(key2, "World");
+        }}).join();
+        assertTrue(msetnx);
+
+        final boolean msetnx2 = CACHE_TEMPLATE.mSetNXAsync(new HashMap<String, String>() {{
+            put(key1, "Hello");
+            put(key2, "World");
+        }}).join();
+        assertFalse(msetnx2);
+
+
+        CACHE_TEMPLATE.del(key1, key2);
+    }
+
+    /**
      * Test set ex.
      */
     public void testSetEX() {
         String key1 = "key1";
-        CACHE_TEMPLATE.set(key1, "hello world");
+        CACHE_TEMPLATE.setObject(key1, "hello world");
         assertEquals("hello world", CACHE_TEMPLATE.get(key1).get());
 
         CACHE_TEMPLATE.setEX(key1, "foo bar", Duration.ofSeconds(10));
+        assertEquals("foo bar", CACHE_TEMPLATE.get(key1).get());
+
+        CACHE_TEMPLATE.del(key1);
+    }
+
+    /**
+     * Test set ex async.
+     */
+    public void testSetEXAsync() {
+        String key1 = "testSetEXAsync1";
+        CACHE_TEMPLATE.setObjectAsync(key1, "hello world").join();
+        assertEquals("hello world", CACHE_TEMPLATE.get(key1).get());
+
+        CACHE_TEMPLATE.setEXAsync(key1, "foo bar", Duration.ofSeconds(10)).join();
         assertEquals("foo bar", CACHE_TEMPLATE.get(key1).get());
 
         CACHE_TEMPLATE.del(key1);
@@ -3046,11 +4218,13 @@ public class AppTest extends TestCase {
      * Test str len.
      */
     public void testStrLen() {
-        String key = "mykey";
-        CACHE_TEMPLATE.set(key, "Hello world");
+        String key = "testStrLen";
+        CACHE_TEMPLATE.setObject(key, "Hello world");
 
         assertEquals(11, CACHE_TEMPLATE.strLen(key));
         assertEquals(0, CACHE_TEMPLATE.strLen("nonexisting"));
+        assertEquals(11, CACHE_TEMPLATE.strLenAsync(key).join().intValue());
+        assertEquals(0, CACHE_TEMPLATE.strLenAsync("nonexisting").join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -3131,10 +4305,10 @@ public class AppTest extends TestCase {
 
     /**
      * Test try lock.
+     * lock
      */
-// lock
     public void testTryLock() {
-        String key = "mylock";
+        String key = "testTryLock";
 
         try {
             final boolean tryLock = CACHE_TEMPLATE.tryLock(key, 3, 5, TimeUnit.SECONDS);
@@ -3166,10 +4340,33 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test try lock async.
+     */
+    public void testTryLockAsync() {
+        String key = "testTryLockAsync";
+
+        final boolean tryLock = CACHE_TEMPLATE.tryLockAsync(key, 3, 5, TimeUnit.SECONDS).join();
+        assertTrue(tryLock);
+
+        CompletableFuture.runAsync(() -> {
+            final boolean b = CACHE_TEMPLATE.tryLockAsync(key, 3, 3, TimeUnit.SECONDS).join();
+            assertFalse(b);
+        }).join();
+
+        CompletableFuture.runAsync(() -> {
+            final boolean b = CACHE_TEMPLATE.tryLockAsync(key, 10, 1, TimeUnit.SECONDS).join();
+            assertTrue(b);
+        }).join();
+
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test try lock 2.
      */
     public void testTryLock2() {
-        String key = "mylock";
+        String key = "testTryLock2";
 
         try {
             final boolean tryLock = CACHE_TEMPLATE.tryLock(key, 3, TimeUnit.SECONDS);
@@ -3203,10 +4400,35 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test try lock 2 async.
+     */
+    public void testTryLock2Async() {
+        String key = "testTryLock2Async";
+
+        final boolean tryLock = CACHE_TEMPLATE.tryLockAsync(key, 3, TimeUnit.SECONDS).join();
+        assertTrue(tryLock);
+
+        CompletableFuture.runAsync(() -> {
+            final boolean b = CACHE_TEMPLATE.tryLockAsync(key, 3, TimeUnit.SECONDS).join();
+            assertFalse(b);
+        }).join();
+
+        CACHE_TEMPLATE.unlock(key);
+
+        CompletableFuture.runAsync(() -> {
+            final boolean b = CACHE_TEMPLATE.tryLockAsync(key, 10, TimeUnit.SECONDS).join();
+            assertTrue(b);
+        }).join();
+
+
+        CACHE_TEMPLATE.del(key);
+    }
+
+    /**
      * Test unlock async.
      */
     public void testUnlockAsync() {
-        String key = "mylock";
+        String key = "testUnlockAsync";
 
         final long id = Thread.currentThread().getId();
 
@@ -3221,7 +4443,7 @@ public class AppTest extends TestCase {
         CompletableFuture.runAsync(() -> {
             assertFalse(id == Thread.currentThread().getId());
             try {
-                CACHE_TEMPLATE.unlockAsync(key);
+                CACHE_TEMPLATE.unlockAsync(key).join();
             } catch (Exception e) {
             }
         }).join();
@@ -3236,7 +4458,7 @@ public class AppTest extends TestCase {
         }).join();
 
         CompletableFuture.runAsync(() -> {
-            CACHE_TEMPLATE.unlockAsync(key, id);
+            CACHE_TEMPLATE.unlockAsync(key, id).join();
             assertFalse(id == Thread.currentThread().getId());
 
             try {
@@ -3255,7 +4477,7 @@ public class AppTest extends TestCase {
      * Test force unlock.
      */
     public void testForceUnlock() {
-        String key = "mylock";
+        String key = "testForceUnlock";
 
         final long id = Thread.currentThread().getId();
 
@@ -3270,6 +4492,43 @@ public class AppTest extends TestCase {
             assertFalse(id == Thread.currentThread().getId());
             try {
                 final boolean forceUnlock = CACHE_TEMPLATE.forceUnlock(key);
+                assertTrue(forceUnlock);
+            } catch (Exception e) {
+            }
+        }).join();
+
+        CompletableFuture.runAsync(() -> {
+            try {
+                final boolean b = CACHE_TEMPLATE.tryLock(key, 3, TimeUnit.SECONDS);
+                assertTrue(b);
+            } catch (InterruptedException e) {
+                throw new RuntimeException(e);
+            }
+        }).join();
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+    /**
+     * Test force unlock async.
+     */
+    public void testForceUnlockAsync() {
+        String key = "testForceUnlockAsync";
+
+        final long id = Thread.currentThread().getId();
+
+        try {
+            final boolean tryLock = CACHE_TEMPLATE.tryLock(key, 3, TimeUnit.SECONDS);
+            assertTrue(tryLock);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+
+        CompletableFuture.runAsync(() -> {
+            assertFalse(id == Thread.currentThread().getId());
+            try {
+                final boolean forceUnlock = CACHE_TEMPLATE.forceUnlockAsync(key).join();
                 assertTrue(forceUnlock);
             } catch (Exception e) {
             }
@@ -3308,7 +4567,7 @@ public class AppTest extends TestCase {
                 "end;" +
                 "return #added;";
 
-        final List<Object> keys = Collections.singletonList("myluakey");
+        final List<Object> keys = Collections.singletonList("my-lua-key");
         final Optional<Object> optional = CACHE_TEMPLATE.executeScript(saddNxLua, keys, "hello", "world");
         assertEquals(2, (long) optional.get());
 
@@ -3319,14 +4578,47 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test execute script async.
+     *
+     * @throws NoSuchAlgorithmException the no such algorithm exception
+     */
+    public void testExecuteScriptAsync() throws NoSuchAlgorithmException {
+        String saddNxLua = "local added = {};" +
+                "for i, v in ipairs(ARGV) do" +
+                "    local addResult = redis.call('SADD', KEYS[1], ARGV[i]);" +
+                "    if( addResult < 1 ) then" +
+                "        for i, v in ipairs(added) do" +
+                "            redis.call('SREM', KEYS[1], v);" +
+                "        end;" +
+                "        added = {};" +
+                "        break;" +
+                "    end;" +
+                "    added[i] = ARGV[i];" +
+                "end;" +
+                "return #added;";
+
+        final List<Object> keys = Collections.singletonList("my-lua-key-async");
+        final Object optional = CACHE_TEMPLATE.executeScriptAsync(saddNxLua, keys, "hello", "world").join();
+        assertEquals(2, (long) optional);
+
+        final Object optional2 = CACHE_TEMPLATE.executeScriptAsync(saddNxLua, keys, "hello", "world").join();
+        assertEquals(0, (long) optional2);
+
+        CACHE_TEMPLATE.del(keys.toArray(new String[]{}));
+    }
+
+    /**
      * Test exists.
      */
     public void testExists() {
-        String key = "myKey";
-        CACHE_TEMPLATE.set(key, "hello world");
+        String key = "testExists";
+        CACHE_TEMPLATE.setObject(key, "hello world");
 
         assertEquals(1, CACHE_TEMPLATE.exists(key));
         assertFalse(1 == CACHE_TEMPLATE.exists("noExistKey"));
+
+        assertEquals(1, CACHE_TEMPLATE.existsAsync(key).join().intValue());
+        assertFalse(1 == CACHE_TEMPLATE.existsAsync("noExistKey").join().intValue());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -3335,9 +4627,9 @@ public class AppTest extends TestCase {
      * Test del.
      */
     public void testDel() {
-        String key = "myKey";
+        String key = "testExists";
 
-        CACHE_TEMPLATE.set(key, "hello world");
+        CACHE_TEMPLATE.setObject(key, "hello world");
 
         final long del = CACHE_TEMPLATE.del(key);
         assertEquals(1, del);
@@ -3348,11 +4640,19 @@ public class AppTest extends TestCase {
      * Test ttl.
      */
     public void testTTL() {
-        String key = "myKey";
-        CACHE_TEMPLATE.set(key, "hello world");
+        String key = "testTTL";
+        String key2 = "testTTL2";
+        CACHE_TEMPLATE.setObject(key, "hello world");
+        CACHE_TEMPLATE.setEX(key2, "hello world", Duration.ofSeconds(30));
 
         assertEquals(-1, CACHE_TEMPLATE.ttl(key));
         assertEquals(-2, CACHE_TEMPLATE.ttl("noExistKey"));
+        assertTrue(CACHE_TEMPLATE.ttl(key2) > 26 && CACHE_TEMPLATE.ttl(key2) <= 30);
+
+        assertEquals(-1, CACHE_TEMPLATE.ttlAsync(key).join().intValue());
+        assertEquals(-2, CACHE_TEMPLATE.ttlAsync("noExistKey").join().intValue());
+        assertTrue(CACHE_TEMPLATE.ttlAsync(key2).join().intValue() > 20 &&
+                CACHE_TEMPLATE.ttlAsync(key2).join().intValue() < 30);
 
         CACHE_TEMPLATE.del(key);
     }
@@ -3362,7 +4662,7 @@ public class AppTest extends TestCase {
      */
     public void testScan() {
         String key = "myObj";
-        CACHE_TEMPLATE.set(key, "hello world");
+        CACHE_TEMPLATE.setObject(key, "hello world");
 
         String key2 = "myHash";
         CACHE_TEMPLATE.hSet(key2, "field", "hello world");
@@ -3394,7 +4694,7 @@ public class AppTest extends TestCase {
      */
     public void testType() {
         String key = "myObj";
-        CACHE_TEMPLATE.set(key, "hello world");
+        CACHE_TEMPLATE.setObject(key, "hello world");
         assertSame(KeyType.STRING, CACHE_TEMPLATE.type(key));
 
         String key2 = "myHash";
@@ -3403,7 +4703,7 @@ public class AppTest extends TestCase {
 
         String key3 = "myList";
         CACHE_TEMPLATE.lPush(key3, "hello world", "foo bar");
-        assertSame(KeyType.LIST, CACHE_TEMPLATE.type(key3));
+        assertSame(KeyType.LIST, CACHE_TEMPLATE.typeAsync(key3).join());
 
         String key4 = "mySet";
         CACHE_TEMPLATE.sAdd(key4, "hello world");
@@ -3418,13 +4718,16 @@ public class AppTest extends TestCase {
 
     /**
      * Test try set rate limiter.
+     * rateLimiter
      */
-// rateLimiter
     public void testTrySetRateLimiter() {
-        String key = "myRateLimiter";
+        String key = "testTrySetRateLimiter";
 
         final boolean b = CACHE_TEMPLATE.trySetRateLimiter(key, 3, 10);
         assertTrue(b);
+
+        CACHE_TEMPLATE.del(key);
+        assertTrue(CACHE_TEMPLATE.trySetRateLimiterAsync(key, 3, 10).join());
 
         CACHE_TEMPLATE.del(key);
     }
@@ -3433,7 +4736,7 @@ public class AppTest extends TestCase {
      * Test try acquire.
      */
     public void testTryAcquire() {
-        String key = "myRateLimiter";
+        String key = "testTryAcquire";
 
         final boolean b = CACHE_TEMPLATE.trySetRateLimiter(key, 3, 10);
         assertTrue(b);
@@ -3448,16 +4751,49 @@ public class AppTest extends TestCase {
     }
 
     /**
+     * Test try acquire async.
+     */
+    public void testTryAcquireAsync() {
+        String key = "testTryAcquireAsync";
+
+        final boolean b = CACHE_TEMPLATE.trySetRateLimiterAsync(key, 3, 10).join();
+        assertTrue(b);
+
+        for (int i = 0; i < 3; i++) {
+            assertTrue(CACHE_TEMPLATE.tryAcquireAsync(key).join());
+        }
+
+        assertFalse(CACHE_TEMPLATE.tryAcquireAsync(key).join());
+
+        CACHE_TEMPLATE.del(key, "{" + key + "}:permits", "{" + key + "}:value");
+    }
+
+    /**
      * Test try acquire 2.
      */
     public void testTryAcquire2() {
-        String key = "myRateLimiter";
+        String key = "testTryAcquire2";
 
         final boolean b = CACHE_TEMPLATE.trySetRateLimiter(key, 3, 10);
         assertTrue(b);
 
         assertTrue(CACHE_TEMPLATE.tryAcquire(key, 3));
         assertFalse(CACHE_TEMPLATE.tryAcquire(key, 3));
+
+        CACHE_TEMPLATE.del(key, "{" + key + "}:permits", "{" + key + "}:value");
+    }
+
+    /**
+     * Test try acquire 2 async.
+     */
+    public void testTryAcquire2Async() {
+        String key = "testTryAcquire2Async";
+
+        final boolean b = CACHE_TEMPLATE.trySetRateLimiterAsync(key, 3, 10).join();
+        assertTrue(b);
+
+        assertTrue(CACHE_TEMPLATE.tryAcquireAsync(key, 3).join());
+        assertFalse(CACHE_TEMPLATE.tryAcquireAsync(key, 3).join());
 
         CACHE_TEMPLATE.del(key, "{" + key + "}:permits", "{" + key + "}:value");
     }

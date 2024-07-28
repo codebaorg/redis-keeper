@@ -51,6 +51,7 @@ import org.redisson.api.geo.GeoSearchArgs;
 import org.redisson.api.geo.OptionalGeoSearch;
 import org.redisson.api.queue.DequeMoveArgs;
 import org.redisson.client.RedisException;
+import org.redisson.client.codec.Codec;
 import org.redisson.client.codec.StringCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,6 +83,8 @@ import java.util.stream.Collectors;
  */
 public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    private final Codec stringCodec = new StringCodec();
 
     private final String connectionInfo;
     private RedissonClient redissonClient;
@@ -385,7 +388,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public Map<Object, Double> geoRadius(String key, double longitude, double latitude, double radius, String geoUnit) {
         log("geoRadius", key, longitude, latitude, radius, geoUnit);
-        return getRGeo(key).radiusWithDistance(longitude, latitude, radius, parseGeoUnit(geoUnit));
+        return getRGeo(key).searchWithDistance(GeoSearchArgs.from(longitude, latitude).radius(radius, parseGeoUnit(geoUnit)));
     }
 
     @Override
@@ -459,12 +462,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public CompletableFuture<List<Object>> geosSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
-        log("geosSearchAsync", key, longitude, latitude, width, height, geoUnit, count, order);
-        return geosSearchRFuture(key, longitude, latitude, width, height, geoUnit, count, order).toCompletableFuture();
+    public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
+        log("geoSearchAsync", key, longitude, latitude, width, height, geoUnit, count, order);
+        return geoSearchRFuture(key, longitude, latitude, width, height, geoUnit, count, order).toCompletableFuture();
     }
 
-    private RFuture<List<Object>> geosSearchRFuture(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
+    private RFuture<List<Object>> geoSearchRFuture(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).box(width, height, parseGeoUnit(geoUnit)).count(count));
         return getRGeo(key).searchAsync(search);
     }
@@ -531,12 +534,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public CompletableFuture<List<Object>> geosSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order) {
-        log("geosSearchAsync", key, member, width, height, geoUnit, count, order);
-        return geosSearchRFuture(key, member, width, height, geoUnit, count, order).toCompletableFuture();
+    public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order) {
+        log("geoSearchAsync", key, member, width, height, geoUnit, count, order);
+        return geoSearchRFuture(key, member, width, height, geoUnit, count, order).toCompletableFuture();
     }
 
-    private RFuture<List<Object>> geosSearchRFuture(String key, Object member, double width, double height, String geoUnit, int count, String order) {
+    private RFuture<List<Object>> geoSearchRFuture(String key, Object member, double width, double height, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).box(width, height, parseGeoUnit(geoUnit)).count(count));
         return getRGeo(key).searchAsync(search);
     }
@@ -567,12 +570,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public CompletableFuture<Map<Object, Double>> geosSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
-        log("geosSearchWithDistanceAsync", key, longitude, latitude, radius, geoUnit, count, order);
-        return geosSearchWithDistanceRFuture(key, longitude, latitude, radius, geoUnit, count, order).toCompletableFuture();
+    public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
+        log("geoSearchWithDistanceAsync", key, longitude, latitude, radius, geoUnit, count, order);
+        return geoSearchWithDistanceRFuture(key, longitude, latitude, radius, geoUnit, count, order).toCompletableFuture();
     }
 
-    private RFuture<Map<Object, Double>> geosSearchWithDistanceRFuture(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
+    private RFuture<Map<Object, Double>> geoSearchWithDistanceRFuture(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).radius(radius, parseGeoUnit(geoUnit)).count(count));
         return getRGeo(key).searchWithDistanceAsync(search);
     }
@@ -674,17 +677,6 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
         return getRGeo(key).searchWithDistance(search);
     }
 
-    @Override
-    public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double width, double height, String geoUnit, int count, String order) {
-        log("geoSearchWithDistanceAsync", key, member, width, height, geoUnit, count, order);
-        return geoSearchWithDistanceRFuture(key, member, width, height, geoUnit, count, order).toCompletableFuture();
-    }
-
-    private RFuture<Map<Object, Double>> geoSearchWithDistanceRFuture(String key, Object member, double width, double height, String geoUnit, int count, String order) {
-        final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).box(width, height, parseGeoUnit(geoUnit)).count(count));
-        return getRGeo(key).searchWithDistanceAsync(search);
-    }
-
     private OptionalGeoSearch getOptionalGeoSearch(double longitude, double latitude, double radius, String geoUnit, String order) {
         final GeoOrder geoOrder = GeoOrder.valueOf(order.toUpperCase(Locale.ROOT));
         return GeoSearchArgs.from(longitude, latitude).radius(radius, parseGeoUnit(geoUnit)).order(geoOrder);
@@ -730,6 +722,20 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
         final HashMap<String, Boolean> resultMap = new HashMap<>();
         for (String field : fields) {
             resultMap.put(field, rMap.containsKey(field));
+        }
+
+        return resultMap;
+    }
+
+    @Override
+    public Map<String, CompletableFuture<Boolean>> hExistsAsync(String key, String... fields) {
+        log("hExistsAsync", key, fields);
+
+        final RMap<Object, Object> rMap = getMap(key);
+
+        final HashMap<String, CompletableFuture<Boolean>> resultMap = new HashMap<>();
+        for (String field : fields) {
+            resultMap.put(field, rMap.containsKeyAsync(field).toCompletableFuture());
         }
 
         return resultMap;
@@ -1182,15 +1188,15 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public Optional<Object> brPoplPush(String source, String destination, long timeout, TimeUnit unit) throws InterruptedException {
-        log("brPoplPush", source, destination, timeout, unit);
+    public Optional<Object> brPopLPush(String source, String destination, long timeout, TimeUnit unit) throws InterruptedException {
+        log("brPopLPush", source, destination, timeout, unit);
         final Object object = getBlockingDeque(source).pollLastAndOfferFirstTo(destination, timeout, unit);
         return Optional.ofNullable(object);
     }
 
     @Override
-    public CompletableFuture<Object> brPoplPushAsync(String source, String destination, long timeout, TimeUnit unit) {
-        log("brPoplPushAsync", source, destination, timeout, unit);
+    public CompletableFuture<Object> brPopLPushAsync(String source, String destination, long timeout, TimeUnit unit) {
+        log("brPopLPushAsync", source, destination, timeout, unit);
         return brPoplPushRFuture(source, destination, timeout, unit).toCompletableFuture();
     }
 
@@ -1325,18 +1331,6 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public CompletableFuture<Void> lPushAsync(String key, Object... elements) {
-        log("lPushAsync", key, elements);
-        return CompletableFuture.allOf(lPushRFuture(key, elements).toArray(new CompletableFuture[]{}));
-    }
-
-    private List<CompletableFuture<Void>> lPushRFuture(String key, Object... elements) {
-        return Arrays.stream(elements)
-                .map(element -> getDeque(key).addFirstAsync(element).toCompletableFuture())
-                .collect(Collectors.toList());
-    }
-
-    @Override
     public int lPushX(String key, Object... elements) {
         log("lPushX", key, elements);
         return getDeque(key).addFirstIfExists(elements);
@@ -1433,15 +1427,14 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public Optional<Object> rPoplPush(String source, String destination) {
-        log("rPoplPush", source, destination);
-        final Object object = getDeque(source).pollLastAndOfferFirstTo(destination);
-        return Optional.ofNullable(object);
+    public Optional<Object> rPopLPush(String source, String destination) {
+        log("rPopLPush", source, destination);
+        return Optional.ofNullable(getDeque(source).pollLastAndOfferFirstTo(destination));
     }
 
     @Override
-    public CompletableFuture<Object> rPoplPushAsync(String source, String destination) {
-        log("rPoplPushAsync", source, destination);
+    public CompletableFuture<Object> rPopLPushAsync(String source, String destination) {
+        log("rPopLPushAsync", source, destination);
         return rPoplPushRFuture(source, destination).toCompletableFuture();
     }
 
@@ -2650,8 +2643,19 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public Optional<Object> get(String key) {
         log("get", key);
-        final Object object = getRBucket(key).get();
-        ;
+        final Object object = getRBucket(key, stringCodec).get();
+        return Optional.ofNullable(object);
+    }
+
+    @Override
+    public Optional<Object> getObject(String key) {
+        log("getObject", key);
+        Object object;
+        try {
+            object = getRBucket(key).get();
+        } catch (Exception e) {
+            object = getRBucket(key, stringCodec).get();
+        }
         return Optional.ofNullable(object);
     }
 
@@ -2661,14 +2665,26 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
         return getRFuture(key).toCompletableFuture();
     }
 
+    @Override
+    public CompletableFuture<Object> getObjectAsync(String key) {
+        log("getObjectAsync", key);
+        return getRBucket(key).getAsync()
+                .handle((object, throwable) -> {
+                    if (null != throwable) {
+                        return getRBucket(key, stringCodec).getAsync().join();
+                    }
+                    return object;
+                }).toCompletableFuture();
+    }
+
     private RFuture<Object> getRFuture(String key) {
-        return getRBucket(key).getAsync();
+        return getRBucket(key, stringCodec).getAsync();
     }
 
     @Override
     public Optional<Object> getDel(String key) {
         log("getDel", key);
-        return Optional.ofNullable(getRBucket(key).getAndDelete());
+        return Optional.ofNullable(getRBucket(key, stringCodec).getAndDelete());
     }
 
     @Override
@@ -2678,7 +2694,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Object> getDelRFuture(String key) {
-        return getRBucket(key).getAndDeleteAsync();
+        return getRBucket(key, stringCodec).getAndDeleteAsync();
     }
 
 //    @Override
@@ -2822,17 +2838,33 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
-    public void set(String key, Object value) {
-        getRBucket(key).set(value);
+    public void setObject(String key, Object value) {
+        log("setObject", key, value);
+
+        if (value instanceof String) {
+            set(key, value.toString());
+        } else if (value instanceof Integer || value instanceof Long) {
+            set(key, Long.parseLong(value.toString()));
+        } else if (value instanceof Float || value instanceof Double) {
+            set(key, Double.parseDouble(value.toString()));
+        } else {
+            getRBucket(key).set(value);
+        }
     }
 
     @Override
-    public CompletableFuture<Void> setAsync(String key, Object value) {
-        return setRFuture(key, value).toCompletableFuture();
-    }
+    public CompletableFuture<Void> setObjectAsync(String key, Object value) {
+        log("setObjectAsync", key, value);
 
-    private RFuture<Void> setRFuture(String key, Object value) {
-        return getRBucket(key).setAsync(value);
+        if (value instanceof String) {
+            return setAsync(key, value.toString());
+        } else if (value instanceof Integer || value instanceof Long) {
+            return setAsync(key, Long.parseLong(value.toString()));
+        } else if (value instanceof Float || value instanceof Double) {
+            return setAsync(key, Double.parseDouble(value.toString()));
+        } else {
+            return getRBucket(key).setAsync(value).toCompletableFuture();
+        }
     }
 
     @Override
@@ -2841,7 +2873,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
         if (null == keys || keys.length == 0) {
             return Collections.emptyMap();
         }
-        return getRBuckets().get(keys);
+        return getRBuckets(stringCodec).get(keys);
     }
 
     @Override
@@ -2851,13 +2883,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Map<String, Object>> mGetRFuture(String... keys) {
-        return getRBuckets().getAsync(keys);
+        return getRBuckets(stringCodec).getAsync(keys);
     }
 
     @Override
     public void mSet(Map<String, String> kvMap) {
         log("mSet", kvMap);
-        getRBuckets().set(kvMap);
+        getRBuckets(stringCodec).set(kvMap);
     }
 
     @Override
@@ -2867,13 +2899,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Void> mSetRFuture(Map<String, String> kvMap) {
-        return getRBuckets().setAsync(kvMap);
+        return getRBuckets(stringCodec).setAsync(kvMap);
     }
 
     @Override
     public boolean mSetNX(Map<String, String> kvMap) {
         log("mSetNX", kvMap);
-        return getRBuckets().trySet(kvMap);
+        return getRBuckets(stringCodec).trySet(kvMap);
     }
 
     @Override
@@ -2883,13 +2915,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Boolean> mSetNXRFuture(Map<String, String> kvMap) {
-        return getRBuckets().trySetAsync(kvMap);
+        return getRBuckets(stringCodec).trySetAsync(kvMap);
     }
 
     @Override
     public void set(String key, String value) {
         log("set", key, value);
-        getRBucket(key).set(value);
+        getRBucket(key, stringCodec).set(value);
     }
 
     @Override
@@ -2899,7 +2931,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Void> setRFuture(String key, String value) {
-        return getRBucket(key).setAsync(value);
+        return getRBucket(key, stringCodec).setAsync(value);
     }
 
     @Override
@@ -2937,7 +2969,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public boolean compareAndSet(String key, String expect, String update) {
         log("compareAndSet", key, expect, update);
-        return getRBucket(key).compareAndSet(expect, update);
+        return getRBucket(key, stringCodec).compareAndSet(expect, update);
     }
 
     @Override
@@ -2947,13 +2979,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Boolean> compareAndSetRFuture(String key, String expect, String update) {
-        return getRBucket(key).compareAndSetAsync(expect, update);
+        return getRBucket(key, stringCodec).compareAndSetAsync(expect, update);
     }
 
     @Override
     public void setEX(String key, String value, Duration duration) {
         log("setEX", key, value, duration);
-        getRBucket(key).set(value, duration.toMillis(), TimeUnit.MILLISECONDS);
+        getRBucket(key, stringCodec).set(value, duration.toMillis(), TimeUnit.MILLISECONDS);
     }
 
     @Override
@@ -2963,7 +2995,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Void> setEXRFuture(String key, String value, Duration duration) {
-        return getRBucket(key).setAsync(value, duration.toMillis(), TimeUnit.MILLISECONDS);
+        return getRBucket(key, stringCodec).setAsync(value, duration.toMillis(), TimeUnit.MILLISECONDS);
     }
 
 //    @Override
@@ -2995,7 +3027,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public long strLen(String key) {
         log("strlen", key);
-        return getRBucket(key).size();
+        return getRBucket(key, stringCodec).size();
     }
 
     @Override
@@ -3005,7 +3037,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private RFuture<Long> strLenRFuture(String key) {
-        return getRBucket(key).sizeAsync();
+        return getRBucket(key, stringCodec).sizeAsync();
     }
 
     @Override
@@ -3115,7 +3147,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public Optional<Object> executeScript(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
         log("executeScript", script, keys, values);
-        return Optional.ofNullable(executeScriptRFuture(script, keys, values).join());
+        return Optional.ofNullable(executeScriptRFuture(script, keys, values).toCompletableFuture().join());
     }
 
     @Override
@@ -3179,13 +3211,22 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public long ttl(String key) {
         log("ttl", key);
-        return getDataSource().getBucket(key).remainTimeToLive();
+        final long remainTimeToLive = getDataSource().getBucket(key).remainTimeToLive();
+        return remainTimeToLive < 0 ? remainTimeToLive : remainTimeToLive / 1000;
     }
 
     @Override
     public CompletableFuture<Long> ttlAsync(String key) {
         log("ttlAsync", key);
-        return ttlRFuture(key).toCompletableFuture();
+        return ttlRFuture(key)
+                .handle((v, e) -> {
+                    if (null != e) {
+                        log("ttlAsync", key, e);
+                        return 0L;
+                    }
+                    return v < 0 ? v : v / 1000;
+                })
+                .toCompletableFuture();
     }
 
     private RFuture<Long> ttlRFuture(String key) {
@@ -3290,39 +3331,43 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private <T> RBucket<T> getRBucket(String key) {
-        return getDataSource().getBucket(key, new StringCodec());
+        return getDataSource().getBucket(key);
     }
 
-    private RBuckets getRBuckets() {
-        return getDataSource().getBuckets(new StringCodec());
+    private <T> RBucket<T> getRBucket(String key, Codec codec) {
+        return getDataSource().getBucket(key, codec);
+    }
+
+    private RBuckets getRBuckets(Codec codec) {
+        return getDataSource().getBuckets(codec);
     }
 
     private <K, V> RMap<K, V> getMap(String key) {
-        return getDataSource().getMap(key, new StringCodec());
+        return getDataSource().getMap(key, stringCodec);
     }
 
     private <V> RList<V> getList(String key) {
-        return getDataSource().getList(key, new StringCodec());
+        return getDataSource().getList(key, stringCodec);
     }
 
     private <V> RBlockingDeque<V> getBlockingDeque(String key) {
-        return getDataSource().getBlockingDeque(key, new StringCodec());
+        return getDataSource().getBlockingDeque(key, stringCodec);
     }
 
     private <V> RDeque<V> getDeque(String key) {
-        return getDataSource().getDeque(key, new StringCodec());
+        return getDataSource().getDeque(key, stringCodec);
     }
 
     private <V> RSet<V> getSet(String key) {
-        return getDataSource().getSet(key, new StringCodec());
+        return getDataSource().getSet(key, stringCodec);
     }
 
     private <V> RScoredSortedSet<V> getRScoredSortedSet(String key) {
-        return getDataSource().getScoredSortedSet(key, new StringCodec());
+        return getDataSource().getScoredSortedSet(key, stringCodec);
     }
 
     private <V> RBloomFilter<V> getRBloomFilter(String key) {
-        return getDataSource().getBloomFilter(key, new StringCodec());
+        return getDataSource().getBloomFilter(key, stringCodec);
     }
 
     private RKeys getRKeys() {
@@ -3334,7 +3379,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private <V> RHyperLogLog<V> getHyperLogLog(String key) {
-        return getDataSource().getHyperLogLog(key, new StringCodec());
+        return getDataSource().getHyperLogLog(key, stringCodec);
     }
 
     private RAtomicLong getRAtomicLong(String key) {
@@ -3362,7 +3407,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     private <V> RGeo<V> getRGeo(String key) {
-        return getDataSource().getGeo(key, new StringCodec());
+        return getDataSource().getGeo(key, stringCodec);
     }
 
     /**

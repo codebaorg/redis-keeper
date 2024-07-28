@@ -176,7 +176,7 @@ public interface CacheTemplate {
      * @param key    the key
      * @param offset the offset
      * @param value  the value
-     * @return the bit
+     * @return the bit: the original bit value stored at offset.
      */
     boolean setBit(String key, long offset, boolean value);
 
@@ -426,7 +426,7 @@ public interface CacheTemplate {
      * @param order     the order
      * @return the completable future
      */
-    CompletableFuture<List<Object>> geosSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order);
+    CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order);
 
     /**
      * Geo search list.
@@ -530,7 +530,7 @@ public interface CacheTemplate {
      * @param order   the order
      * @return the completable future
      */
-    CompletableFuture<List<Object>> geosSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order);
+    CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order);
 
     /**
      * Geo search with distance map.
@@ -584,7 +584,7 @@ public interface CacheTemplate {
      * @param order     the order
      * @return the completable future
      */
-    CompletableFuture<Map<Object, Double>> geosSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order);
+    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order);
 
     /**
      * Geo search with distance map.
@@ -735,20 +735,6 @@ public interface CacheTemplate {
     Map<Object, Double> geoSearchWithDistance(String key, Object member, double width, double height, String geoUnit, int count, String order);
 
     /**
-     * Geo search with distance async completable future.
-     *
-     * @param key     the key
-     * @param member  the member
-     * @param width   the width
-     * @param height  the height
-     * @param geoUnit the geo unit
-     * @param count   the count
-     * @param order   the order
-     * @return the completable future
-     */
-    CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double width, double height, String geoUnit, int count, String order);
-
-    /**
      * H del map.
      *
      * @param key    the key
@@ -774,6 +760,15 @@ public interface CacheTemplate {
      * @return the map
      */
     Map<String, Boolean> hExists(String key, String... fields);
+
+    /**
+     * H exists async map.
+     *
+     * @param key    the key
+     * @param fields the fields
+     * @return the map
+     */
+    Map<String, CompletableFuture<Boolean>> hExistsAsync(String key, String... fields);
 
     /**
      * H get optional.
@@ -1273,7 +1268,7 @@ public interface CacheTemplate {
     CompletableFuture<Object> brPopAsync(String key, long timeout, TimeUnit unit, String... otherKeys);
 
     /**
-     * Br popl push optional.
+     * Br pop push optional.
      *
      * @param source      the source
      * @param destination the destination
@@ -1282,10 +1277,10 @@ public interface CacheTemplate {
      * @return the optional
      * @throws InterruptedException the interrupted exception
      */
-    Optional<Object> brPoplPush(String source, String destination, long timeout, TimeUnit unit) throws InterruptedException;
+    Optional<Object> brPopLPush(String source, String destination, long timeout, TimeUnit unit) throws InterruptedException;
 
     /**
-     * Br popl push async completable future.
+     * Br pop push async completable future.
      *
      * @param source      the source
      * @param destination the destination
@@ -1293,7 +1288,7 @@ public interface CacheTemplate {
      * @param unit        the unit
      * @return the completable future
      */
-    CompletableFuture<Object> brPoplPushAsync(String source, String destination, long timeout, TimeUnit unit);
+    CompletableFuture<Object> brPopLPushAsync(String source, String destination, long timeout, TimeUnit unit);
 
     /**
      * L index optional.
@@ -1337,7 +1332,7 @@ public interface CacheTemplate {
     CompletableFuture<Integer> lInsertAsync(String key, boolean before, Object pivot, Object element);
 
     /**
-     * Llen int.
+     * L len int.
      *
      * @param key the key
      * @return the int
@@ -1345,7 +1340,7 @@ public interface CacheTemplate {
     int llen(String key);
 
     /**
-     * Llen async completable future.
+     * L len async completable future.
      *
      * @param key the key
      * @return the completable future
@@ -1398,15 +1393,6 @@ public interface CacheTemplate {
      * @return the int
      */
     int lPush(String key, Object... elements);
-
-    /**
-     * L push async completable future.
-     *
-     * @param key      the key
-     * @param elements the elements
-     * @return the completable future
-     */
-    CompletableFuture<Void> lPushAsync(String key, Object... elements);
 
     /**
      * L push x int.
@@ -1521,22 +1507,22 @@ public interface CacheTemplate {
     CompletableFuture<List<Object>> rPopAsync(String key, int count);
 
     /**
-     * R popl push optional.
+     * R pop l push optional.
      *
      * @param source      the source
      * @param destination the destination
      * @return the optional
      */
-    Optional<Object> rPoplPush(String source, String destination);
+    Optional<Object> rPopLPush(String source, String destination);
 
     /**
-     * R popl push async completable future.
+     * R pop l push async completable future.
      *
      * @param source      the source
      * @param destination the destination
      * @return the completable future
      */
-    CompletableFuture<Object> rPoplPushAsync(String source, String destination);
+    CompletableFuture<Object> rPopLPushAsync(String source, String destination);
 
     /**
      * R push boolean.
@@ -2353,7 +2339,6 @@ public interface CacheTemplate {
      */
     CompletableFuture<Object> zmPopAsync(String key, boolean min);
 
-
     /**
      * Zm pop optional.
      *
@@ -2930,12 +2915,28 @@ public interface CacheTemplate {
     Optional<Object> get(String key);
 
     /**
+     * Gets object.
+     *
+     * @param key the key
+     * @return the object
+     */
+    Optional<Object> getObject(String key);
+
+    /**
      * Gets async.
      *
      * @param key the key
      * @return the async
      */
     CompletableFuture<Object> getAsync(String key);
+
+    /**
+     * Gets object async.
+     *
+     * @param key the key
+     * @return the object async
+     */
+    CompletableFuture<Object> getObjectAsync(String key);
 
     /**
      * Gets del.
@@ -3083,7 +3084,7 @@ public interface CacheTemplate {
      * @param key   the key
      * @param value the value
      */
-    void set(String key, Object value);
+    void setObject(String key, Object value);
 
     /**
      * Sets async.
@@ -3092,7 +3093,7 @@ public interface CacheTemplate {
      * @param value the value
      * @return the async
      */
-    CompletableFuture<Void> setAsync(String key, Object value);
+    CompletableFuture<Void> setObjectAsync(String key, Object value);
 
     /**
      * M get map.
