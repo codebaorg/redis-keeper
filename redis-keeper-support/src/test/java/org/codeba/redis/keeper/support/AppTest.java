@@ -1,17 +1,17 @@
 /*
  * Copyright (c) 2024-2025, redis-keeper (mimang447@gmail.com)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
  */
 
 package org.codeba.redis.keeper.support;
@@ -1576,6 +1576,26 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.del(key);
 
+        CACHE_TEMPLATE.rPush(key, "hello", "hello", "foo", "hello");
+        assertEquals("hello", CACHE_TEMPLATE.lRem(key, 0).get().toString());
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+    public void testLRemAll() {
+        String key = "testLRemAll";
+
+        final boolean b = CACHE_TEMPLATE.rPush(key, "hello", "hello", "foo", "hello");
+        assertTrue(b);
+
+        CACHE_TEMPLATE.lRemAll(key, "hello");
+
+        final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
+        assertEquals("foo", objects.get(0));
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
     /**
@@ -1596,6 +1616,26 @@ public class AppTest extends TestCase {
         final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
         assertEquals("foo", objects.get(0));
         assertEquals("hello", objects.get(1));
+
+        CACHE_TEMPLATE.del(key);
+
+        CACHE_TEMPLATE.rPush(key, "hello", "hello", "foo", "hello");
+        assertEquals("hello", CACHE_TEMPLATE.lRemAsync(key, 0).join().toString());
+
+        CACHE_TEMPLATE.del(key);
+
+    }
+
+    public void testLRemAllAsync() {
+        String key = "testLRemAllAsync";
+
+        final boolean b = CACHE_TEMPLATE.rPush(key, "hello", "hello", "foo", "hello");
+        assertTrue(b);
+
+        CACHE_TEMPLATE.lRemAllAsync(key, "hello").join();
+
+        final List<Object> objects = CACHE_TEMPLATE.lRange(key, 0, -1);
+        assertEquals("foo", objects.get(0));
 
         CACHE_TEMPLATE.del(key);
 
@@ -3988,7 +4028,7 @@ public class AppTest extends TestCase {
         String key1 = "key1";
         String key2 = "key2";
 
-        CACHE_TEMPLATE.setObject(key1, "Hello");
+        CACHE_TEMPLATE.set(key1, "Hello");
         CACHE_TEMPLATE.setObject(key2, "World");
 
         final Map<String, Object> map = CACHE_TEMPLATE.mGet(key1, key2, "nonexisting");
@@ -4238,11 +4278,15 @@ public class AppTest extends TestCase {
         String key = "bf";
 
         CACHE_TEMPLATE.bfReserve(key, 100, 0.01);
-
         assertTrue(CACHE_TEMPLATE.bfAdd(key, "item1"));
         assertFalse(CACHE_TEMPLATE.bfAdd(key, "item1"));
+        assertTrue(CACHE_TEMPLATE.deleteBf(key));
 
-        CACHE_TEMPLATE.del(key, "{" + key + "}:config");
+        CACHE_TEMPLATE.bfReserve(key, 100, 0.01);
+        assertTrue(CACHE_TEMPLATE.bfAdd(key, "item1"));
+        assertFalse(CACHE_TEMPLATE.bfAdd(key, "item1"));
+        assertTrue(CACHE_TEMPLATE.deleteBfAsync(key).join());
+
     }
 
     /**
@@ -4268,12 +4312,8 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.bfReserve(key, 100, 0.01);
 
-        final Object bfmAdd = CACHE_TEMPLATE.bfmAdd(key, Arrays.asList("item1", "item2", "item2"));
-        if (bfmAdd instanceof Boolean) {
-            assertTrue((Boolean) bfmAdd);
-        } else {
-            assertEquals(2, bfmAdd);
-        }
+        final boolean bfmAdd = CACHE_TEMPLATE.bfmAdd(key, Arrays.asList("item1", "item2", "item2"));
+        assertTrue(bfmAdd);
 
         CACHE_TEMPLATE.del(key, "{" + key + "}:config");
     }
@@ -4623,6 +4663,24 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.del(key);
     }
 
+    public void testExpire() {
+        String key = "testExpire";
+        CACHE_TEMPLATE.setObject(key, "hello world");
+
+        assertTrue(CACHE_TEMPLATE.expire(key, 60, TimeUnit.SECONDS));
+        assertTrue(CACHE_TEMPLATE.ttl(key) > 55 && CACHE_TEMPLATE.ttl(key) < 60);
+
+        assertTrue(CACHE_TEMPLATE.expireAt(key, System.currentTimeMillis() + 15000));
+        assertTrue(CACHE_TEMPLATE.ttl(key) > 10 && CACHE_TEMPLATE.ttl(key) < 15);
+
+        assertTrue(CACHE_TEMPLATE.expireAsync(key, 22, TimeUnit.SECONDS).join());
+        assertTrue(CACHE_TEMPLATE.ttl(key) > 18 && CACHE_TEMPLATE.ttl(key) < 22);
+
+        assertTrue(CACHE_TEMPLATE.expireAtAsync(key, System.currentTimeMillis() + 55000).join());
+        assertTrue(CACHE_TEMPLATE.ttl(key) > 50 && CACHE_TEMPLATE.ttl(key) < 55);
+
+    }
+
     /**
      * Test del.
      */
@@ -4634,6 +4692,23 @@ public class AppTest extends TestCase {
         final long del = CACHE_TEMPLATE.del(key);
         assertEquals(1, del);
         assertFalse(1 == CACHE_TEMPLATE.del(key));
+    }
+
+    public void testUnlink() {
+        String key = "testUnlink";
+        String key2 = "testUnlink2";
+        String key3 = "testUnlink3";
+        String key4 = "testUnlink4";
+
+        CACHE_TEMPLATE.setObject(key, "hello world");
+        CACHE_TEMPLATE.setObject(key2, "foo");
+        CACHE_TEMPLATE.setObject(key3, "foo");
+        CACHE_TEMPLATE.setObject(key4, "foo");
+
+        assertEquals(2, CACHE_TEMPLATE.unlink(key, key2));
+        assertEquals(2, CACHE_TEMPLATE.unlinkAsync(key3, key4).join().intValue());
+        assertFalse(1 == CACHE_TEMPLATE.unlink(key));
+        assertFalse(1 == CACHE_TEMPLATE.unlinkAsync(key).join().intValue());
     }
 
     /**
@@ -4655,6 +4730,24 @@ public class AppTest extends TestCase {
                 CACHE_TEMPLATE.ttlAsync(key2).join().intValue() < 30);
 
         CACHE_TEMPLATE.del(key);
+    }
+
+    public void testPTTL() {
+        String key = "testPTTL";
+        String key2 = "testPTTL2";
+        CACHE_TEMPLATE.setObject(key, "hello world");
+        CACHE_TEMPLATE.setEX(key2, "hello world", Duration.ofSeconds(30));
+
+        assertEquals(-1, CACHE_TEMPLATE.pTTL(key));
+        assertEquals(-2, CACHE_TEMPLATE.pTTL("noExistKey"));
+        assertTrue(CACHE_TEMPLATE.pTTL(key2) > 26000 && CACHE_TEMPLATE.pTTL(key2) <= 30000);
+
+        assertEquals(-1, CACHE_TEMPLATE.pTTLAsync(key).join().intValue());
+        assertEquals(-2, CACHE_TEMPLATE.pTTLAsync("noExistKey").join().intValue());
+        assertTrue(CACHE_TEMPLATE.pTTLAsync(key2).join().intValue() > 20000 &&
+                CACHE_TEMPLATE.pTTLAsync(key2).join().intValue() < 30000);
+
+        CACHE_TEMPLATE.del(key, key2);
     }
 
     /**

@@ -1,17 +1,17 @@
 /*
  * Copyright (c) 2024-2025, redis-keeper (mimang447@gmail.com)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
  */
 
 package org.codeba.redis.keeper.core;
@@ -1442,6 +1442,14 @@ public interface CacheTemplate {
     boolean lRem(String key, Object element);
 
     /**
+     * L rem all.
+     *
+     * @param key     the key
+     * @param element the element
+     */
+    void lRemAll(String key, Object element);
+
+    /**
      * L rem async completable future.
      *
      * @param key     the key
@@ -1449,6 +1457,33 @@ public interface CacheTemplate {
      * @return the completable future
      */
     CompletableFuture<Boolean> lRemAsync(String key, Object element);
+
+    /**
+     * L rem all async completable future.
+     *
+     * @param key     the key
+     * @param element the element
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> lRemAllAsync(String key, Object element);
+
+    /**
+     * L rem optional.
+     *
+     * @param key   the key
+     * @param index the index
+     * @return the optional
+     */
+    Optional<Object> lRem(String key, int index);
+
+    /**
+     * L rem async completable future.
+     *
+     * @param key   the key
+     * @param index the index
+     * @return the completable future
+     */
+    CompletableFuture<Object> lRemAsync(String key, int index);
 
     /**
      * L set.
@@ -3294,6 +3329,22 @@ public interface CacheTemplate {
     boolean bfReserve(String key, long expectedInsertions, double falseProbability);
 
     /**
+     * Delete bf boolean.
+     *
+     * @param key the key
+     * @return the boolean
+     */
+    boolean deleteBf(String key);
+
+    /**
+     * Delete bf async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> deleteBfAsync(String key);
+
+    /**
      * Try lock boolean.
      *
      * @param key       the key
@@ -3416,6 +3467,44 @@ public interface CacheTemplate {
     CompletableFuture<Long> existsAsync(String... keys);
 
     /**
+     * Expire boolean.
+     *
+     * @param key        the key
+     * @param timeToLive the time to live
+     * @param timeUnit   the time unit
+     * @return the boolean
+     */
+    boolean expire(String key, long timeToLive, TimeUnit timeUnit);
+
+    /**
+     * Expire async completable future.
+     *
+     * @param key        the key
+     * @param timeToLive the time to live
+     * @param timeUnit   the time unit
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> expireAsync(String key, long timeToLive, TimeUnit timeUnit);
+
+    /**
+     * Expire at boolean.
+     *
+     * @param key       the key
+     * @param timestamp the timestamp
+     * @return the boolean
+     */
+    boolean expireAt(String key, long timestamp);
+
+    /**
+     * Expire at async completable future.
+     *
+     * @param key       the key
+     * @param timestamp the timestamp
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> expireAtAsync(String key, long timestamp);
+
+    /**
      * Del long.
      *
      * @param keys the keys
@@ -3432,6 +3521,22 @@ public interface CacheTemplate {
     CompletableFuture<Long> delAsync(String... keys);
 
     /**
+     * Unlink long.
+     *
+     * @param keys the keys
+     * @return the long
+     */
+    long unlink(String... keys);
+
+    /**
+     * Unlink async completable future.
+     *
+     * @param keys the keys
+     * @return the completable future
+     */
+    CompletableFuture<Long> unlinkAsync(String... keys);
+
+    /**
      * Ttl long.
      *
      * @param key the key
@@ -3446,6 +3551,22 @@ public interface CacheTemplate {
      * @return the completable future
      */
     CompletableFuture<Long> ttlAsync(String key);
+
+    /**
+     * P ttl long.
+     *
+     * @param key the key
+     * @return the long
+     */
+    long pTTL(String key);
+
+    /**
+     * P ttl async completable future.
+     *
+     * @param key the key
+     * @return the completable future
+     */
+    CompletableFuture<Long> pTTLAsync(String key);
 
     /**
      * Scan iterable.
