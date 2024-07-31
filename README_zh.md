@@ -7,9 +7,9 @@
 
 **支持 JDK: 1.8 ... 21**
 
-**支持 Redisson: 3.15.5 ... 3.27.0**
+**支持 Redisson: 3.15.5 ... 3.33.0**
 
-**支持 Redis: 3.0 ... 7.2**
+**支持 Redis: 3.0 ... 7.4**
 
 ## 特征
 
@@ -237,7 +237,7 @@ public class MyCacheTemplate extends DefaultRedissonTemplate implements CacheTem
     }
 
     public void test() {
-	    final RedissonClient redissonClient = getDataSource();
+	final RedissonClient redissonClient = getDataSource();
         redissonClient.someMehotd();
         System.out.println("hello world");
     }
