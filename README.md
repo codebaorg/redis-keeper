@@ -7,9 +7,9 @@
 
 **Supported JDK: 1.8 ... 21**
 
-**Supported Redisson: 3.15.5 ... 3.27.0**
+**Supported Redisson: 3.15.5 ... 3.33.0**
 
-**Supported Redis: 3.0 ... 7.2**
+**Supported Redis: 3.0 ... 7.4**
 
 ## Features
 
@@ -236,7 +236,7 @@ public class MyCacheTemplate extends DefaultRedissonTemplate implements CacheTem
     }
 
     public void test() {
-	    final RedissonClient redissonClient = getDataSource();
+	final RedissonClient redissonClient = getDataSource();
         redissonClient.someMehotd();
         System.out.println("hello world");
     }
