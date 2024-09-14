@@ -17,12 +17,18 @@
 package org.codeba.redis.keeper.support;
 
 import org.codeba.redis.keeper.core.CacheTemplate;
+import org.codeba.redis.keeper.core.KBatch;
+import org.codeba.redis.keeper.core.KBitSet;
+import org.codeba.redis.keeper.core.KGeneric;
+import org.codeba.redis.keeper.core.KHyperLogLog;
+import org.codeba.redis.keeper.core.KMap;
 import org.codeba.redis.keeper.core.KeyType;
 import org.redisson.Redisson;
 import org.redisson.api.RFuture;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
+import org.redisson.client.codec.Codec;
 import org.redisson.client.codec.StringCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -49,12 +55,16 @@ import java.util.concurrent.TimeUnit;
  */
 public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate {
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    private Codec stringCodec = new StringCodec();
+
     private final String connectionInfo;
     private RedissonClient redissonClient;
     private final boolean invokeParamsPrint;
-    private final RBitMap rBitMap;
-    private final RHash rHash;
-    private final RHyperLogLog rHyperLogLog;
+
+    private final KBitSet kBitSet;
+    private final KMap kMap;
+    private final KHyperLogLog kHyperLogLog;
     private final RLists rLists;
     private final RSets rSets;
     private final RZSet rzSet;
@@ -62,8 +72,8 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     private final RBloomFilters rBloomFilters;
     private final RLocks rLocks;
     private final RRateLimiters rRateLimiters;
-    private final RGeneric rGeneric;
-    private final RGeos rGeos;
+    private final KGeneric kGeneric;
+    private final KRedissonGeo kRedissonGeo;
 
     /**
      * Instantiates a new Default redisson template.
@@ -80,9 +90,9 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
             log.error("org.codeba.redis.keeper.support.DefaultCacheDatasource.instantTemplate(CacheKeeperConfig config)--", e);
         }
 
-        this.rBitMap = new RBitMap(connectionInfo, redissonClient, invokeParamsPrint);
-        this.rHash = new RHash(connectionInfo, redissonClient, invokeParamsPrint);
-        this.rHyperLogLog = new RHyperLogLog(connectionInfo, redissonClient, invokeParamsPrint);
+        this.kBitSet = new KRedissonBitSet(redissonClient);
+        this.kMap = new KRedissonMap(redissonClient, stringCodec);
+        this.kHyperLogLog = new KRedissonHyperLogLog(redissonClient, stringCodec);
         this.rLists = new RLists(connectionInfo, redissonClient, invokeParamsPrint);
         this.rSets = new RSets(connectionInfo, redissonClient, invokeParamsPrint);
         this.rzSet = new RZSet(connectionInfo, redissonClient, invokeParamsPrint);
@@ -90,8 +100,8 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
         this.rBloomFilters = new RBloomFilters(connectionInfo, redissonClient, invokeParamsPrint);
         this.rLocks = new RLocks(connectionInfo, redissonClient, invokeParamsPrint);
         this.rRateLimiters = new RRateLimiters(connectionInfo, redissonClient, invokeParamsPrint);
-        this.rGeneric = new RGeneric(connectionInfo, redissonClient, invokeParamsPrint);
-        this.rGeos = new RGeos(connectionInfo, redissonClient, invokeParamsPrint);
+        this.kGeneric = new KRedissonGeneric(redissonClient);
+        this.kRedissonGeo = new KRedissonGeo(redissonClient, stringCodec);
     }
 
     /**
@@ -134,438 +144,443 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public long bitCount(String key) {
         log("bitCount", key);
-        return rBitMap.bitCount(key);
+        return kBitSet.bitCount(key);
     }
 
     @Override
     public CompletableFuture<Long> bitCountAsync(String key) {
         log("bitCountAsync", key);
-        return rBitMap.bitCountAsync(key);
+        return kBitSet.bitCountAsync(key);
     }
 
     @Override
     public long bitFieldSetSigned(String key, int size, long offset, long value) {
         log("bitFieldSetSigned", key, size, offset, value);
-        return rBitMap.bitFieldSetSigned(key, size, offset, value);
+        return kBitSet.bitFieldSetSigned(key, size, offset, value);
     }
 
     @Override
     public CompletableFuture<Long> bitFieldSetSignedAsync(String key, int size, long offset, long value) {
         log("bitFieldSetSignedAsync", key, size, offset, value);
-        return rBitMap.bitFieldSetSignedAsync(key, size, offset, value);
+        return kBitSet.bitFieldSetSignedAsync(key, size, offset, value);
     }
 
     @Override
     public long bitFieldSetUnSigned(String key, int size, long offset, long value) {
         log("bitFieldSetUnSigned", key, size, offset, value);
-        return rBitMap.bitFieldSetUnSigned(key, size, offset, value);
+        return kBitSet.bitFieldSetUnSigned(key, size, offset, value);
     }
 
     @Override
     public CompletableFuture<Long> bitFieldSetUnSignedAsync(String key, int size, long offset, long value) {
         log("bitFieldSetUnSignedAsync", key, size, offset, value);
-        return rBitMap.bitFieldSetUnSignedAsync(key, size, offset, value);
+        return kBitSet.bitFieldSetUnSignedAsync(key, size, offset, value);
     }
 
     @Override
     public long bitFieldGetSigned(String key, int size, long offset) {
         log("bitFieldGetSigned", key, offset);
-        return rBitMap.bitFieldGetSigned(key, size, offset);
+        return kBitSet.bitFieldGetSigned(key, size, offset);
     }
 
     @Override
     public CompletableFuture<Long> bitFieldGetSignedAsync(String key, int size, long offset) {
         log("bitFieldGetSignedAsync", key, offset);
-        return rBitMap.bitFieldGetSignedAsync(key, size, offset);
+        return kBitSet.bitFieldGetSignedAsync(key, size, offset);
     }
 
     @Override
     public long bitFieldGetUnSigned(String key, int size, long offset) {
         log("bitFieldGetUnSigned", key, offset);
-        return rBitMap.bitFieldGetUnSigned(key, size, offset);
+        return kBitSet.bitFieldGetUnSigned(key, size, offset);
     }
 
     @Override
     public CompletableFuture<Long> bitFieldGetUnSignedAsync(String key, int size, long offset) {
         log("bitFieldGetUnSignedAsync", key, offset);
-        return rBitMap.bitFieldGetUnSignedAsync(key, size, offset);
+        return kBitSet.bitFieldGetUnSignedAsync(key, size, offset);
     }
 
     @Override
     public void bitOpOr(String destKey, String... keys) {
         log("bitOpOr", destKey, keys);
-        rBitMap.bitOpOr(destKey, keys);
+        kBitSet.bitOpOr(destKey, keys);
     }
 
     @Override
     public CompletableFuture<Void> bitOpOrAsync(String destKey, String... keys) {
         log("bitOpOrAsync", destKey, keys);
-        return rBitMap.bitOpOrAsync(destKey, keys);
+        return kBitSet.bitOpOrAsync(destKey, keys);
     }
 
     @Override
     public boolean getBit(String key, long bitIndex) {
         log("getBit", key, bitIndex);
-        return rBitMap.getBit(key, bitIndex);
+        return kBitSet.getBit(key, bitIndex);
     }
 
     @Override
     public CompletableFuture<Boolean> getBitAsync(String key, long bitIndex) {
         log("getBitAsync", key, bitIndex);
-        return rBitMap.getBitAsync(key, bitIndex);
+        return kBitSet.getBitAsync(key, bitIndex);
     }
 
     @Override
     public boolean setBit(String key, long offset, boolean value) {
         log("setBit", key, offset, value);
-        return rBitMap.setBit(key, offset, value);
+        return kBitSet.setBit(key, offset, value);
     }
 
     @Override
     public CompletableFuture<Boolean> setBitAsync(String key, long offset, boolean value) {
         log("setBitAsync", key, offset, value);
-        return rBitMap.setBitAsync(key, offset, value);
+        return kBitSet.setBitAsync(key, offset, value);
     }
 
     @Override
     public long geoAdd(String key, double longitude, double latitude, Object member) {
         log("geoAdd", key, longitude, latitude, member);
-        return rGeos.geoAdd(key, longitude, latitude, member);
+        return kRedissonGeo.geoAdd(key, longitude, latitude, member);
     }
 
     @Override
     public CompletableFuture<Long> geoAddAsync(String key, double longitude, double latitude, Object member) {
         log("geoAddAsync", key, longitude, latitude, member);
-        return rGeos.geoAddAsync(key, longitude, latitude, member);
+        return kRedissonGeo.geoAddAsync(key, longitude, latitude, member);
     }
 
     @Override
     public boolean geoAddXX(String key, double longitude, double latitude, Object member) {
         log("geoAddXX", key, longitude, latitude, member);
-        return rGeos.geoAddXX(key, longitude, latitude, member);
+        return kRedissonGeo.geoAddXX(key, longitude, latitude, member);
     }
 
     @Override
     public CompletableFuture<Boolean> geoAddXXAsync(String key, double longitude, double latitude, Object member) {
         log("geoAddXXAsync", key, longitude, latitude, member);
-        return rGeos.geoAddXXAsync(key, longitude, latitude, member);
+        return kRedissonGeo.geoAddXXAsync(key, longitude, latitude, member);
     }
 
     @Override
     public Double geoDist(String key, Object firstMember, Object secondMember, String geoUnit) {
         log("geoDist", key, firstMember, secondMember, geoUnit);
-        return rGeos.geoDist(key, firstMember, secondMember, geoUnit);
+        return kRedissonGeo.geoDist(key, firstMember, secondMember, geoUnit);
     }
 
     @Override
     public CompletableFuture<Double> geoDistAsync(String key, Object firstMember, Object secondMember, String geoUnit) {
         log("geoDistAsync", key, firstMember, secondMember, geoUnit);
-        return rGeos.geoDistAsync(key, firstMember, secondMember, geoUnit);
+        return kRedissonGeo.geoDistAsync(key, firstMember, secondMember, geoUnit);
     }
 
     @Override
     public Map<Object, String> geoHash(String key, Object... members) {
         log("geoHash", key, members);
-        return rGeos.geoHash(key, members);
+        return kRedissonGeo.geoHash(key, members);
     }
 
     @Override
     public CompletableFuture<Map<Object, String>> geoHashAsync(String key, Object... members) {
         log("geoHashAsync", key, members);
-        return rGeos.geoHashAsync(key, members);
+        return kRedissonGeo.geoHashAsync(key, members);
     }
 
     @Override
     public Map<Object, double[]> geoPos(String key, Object... members) {
         log("geoPos", key, members);
-        return rGeos.geoPos(key, members);
+        return kRedissonGeo.geoPos(key, members);
     }
 
     @Override
     public CompletableFuture<Map<Object, double[]>> geoPosAsync(String key, Object... members) {
         log("geoPosAsync", key, members);
-        return rGeos.geoPosAsync(key, members);
+        return kRedissonGeo.geoPosAsync(key, members);
     }
 
     @Override
     public Map<Object, Double> geoRadius(String key, double longitude, double latitude, double radius, String geoUnit) {
         log("geoRadius", key, longitude, latitude, radius, geoUnit);
-        return rGeos.geoRadius(key, longitude, latitude, radius, geoUnit);
+        return kRedissonGeo.geoRadius(key, longitude, latitude, radius, geoUnit);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoRadiusAsync(String key, double longitude, double latitude, double radius, String geoUnit) {
         log("geoRadiusAsync", key, longitude, latitude, radius, geoUnit);
-        return rGeos.geoRadiusAsync(key, longitude, latitude, radius, geoUnit);
+        return kRedissonGeo.geoRadiusAsync(key, longitude, latitude, radius, geoUnit);
     }
 
     @Override
     public List<Object> geoSearch(String key, double longitude, double latitude, double radius, String geoUnit, String order) {
         log("geoSearch", key, longitude, latitude, radius, geoUnit, order);
-        return rGeos.geoSearch(key, longitude, latitude, radius, geoUnit, order);
+        return kRedissonGeo.geoSearch(key, longitude, latitude, radius, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double radius, String geoUnit, String order) {
         log("geoSearchAsync", key, longitude, latitude, radius, geoUnit, order);
-        return rGeos.geoSearchAsync(key, longitude, latitude, radius, geoUnit, order);
+        return kRedissonGeo.geoSearchAsync(key, longitude, latitude, radius, geoUnit, order);
     }
 
     public List<Object> geoSearch(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         log("geoSearch", key, longitude, latitude, radius, geoUnit, count, order);
-        return rGeos.geoSearch(key, longitude, latitude, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearch(key, longitude, latitude, radius, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         log("geoSearchAsync", key, longitude, latitude, radius, geoUnit, count, order);
-        return rGeos.geoSearchAsync(key, longitude, latitude, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearchAsync(key, longitude, latitude, radius, geoUnit, count, order);
     }
 
     @Override
     public List<Object> geoSearch(String key, double longitude, double latitude, double width, double height, String geoUnit, String order) {
         log("geoSearch", key, longitude, latitude, width, height, geoUnit, order);
-        return rGeos.geoSearch(key, longitude, latitude, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearch(key, longitude, latitude, width, height, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, String order) {
         log("geoSearchAsync", key, longitude, latitude, width, height, geoUnit, order);
-        return rGeos.geoSearchAsync(key, longitude, latitude, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearchAsync(key, longitude, latitude, width, height, geoUnit, order);
     }
 
     @Override
     public List<Object> geoSearch(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         log("geoSearch", key, longitude, latitude, width, height, geoUnit, count, order);
-        return rGeos.geoSearch(key, longitude, latitude, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearch(key, longitude, latitude, width, height, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         log("geoSearchAsync", key, longitude, latitude, width, height, geoUnit, count, order);
-        return rGeos.geoSearchAsync(key, longitude, latitude, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearchAsync(key, longitude, latitude, width, height, geoUnit, count, order);
     }
 
     @Override
     public List<Object> geoSearch(String key, Object member, double radius, String geoUnit, String order) {
         log("geoSearch", key, member, radius, geoUnit, order);
-        return rGeos.geoSearch(key, member, radius, geoUnit, order);
+        return kRedissonGeo.geoSearch(key, member, radius, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double radius, String geoUnit, String order) {
         log("geoSearchAsync", key, member, radius, geoUnit, order);
-        return rGeos.geoSearchAsync(key, member, radius, geoUnit, order);
+        return kRedissonGeo.geoSearchAsync(key, member, radius, geoUnit, order);
     }
 
     @Override
     public List<Object> geoSearch(String key, Object member, double radius, String geoUnit, int count, String order) {
         log("geoSearch", key, member, radius, geoUnit, count, order);
-        return rGeos.geoSearch(key, member, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearch(key, member, radius, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double radius, String geoUnit, int count, String order) {
         log("geoSearchAsync", key, member, radius, geoUnit, count, order);
-        return rGeos.geoSearchAsync(key, member, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearchAsync(key, member, radius, geoUnit, count, order);
     }
 
     @Override
     public List<Object> geoSearch(String key, Object member, double width, double height, String geoUnit, String order) {
         log("geoSearch", key, member, width, height, geoUnit, order);
-        return rGeos.geoSearch(key, member, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearch(key, member, width, height, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, String order) {
         log("geoSearchAsync", key, member, width, height, geoUnit, order);
-        return rGeos.geoSearchAsync(key, member, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearchAsync(key, member, width, height, geoUnit, order);
     }
 
     @Override
     public List<Object> geoSearch(String key, Object member, double width, double height, String geoUnit, int count, String order) {
         log("geoSearch", key, member, width, height, geoUnit, count, order);
-        return rGeos.geoSearch(key, member, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearch(key, member, width, height, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order) {
         log("geoSearchAsync", key, member, width, height, geoUnit, count, order);
-        return rGeos.geoSearchAsync(key, member, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearchAsync(key, member, width, height, geoUnit, count, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double radius, String geoUnit, String order) {
         log("geoSearchWithDistance", key, longitude, latitude, radius, geoUnit, order);
-        return rGeos.geoSearchWithDistance(key, longitude, latitude, radius, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistance(key, longitude, latitude, radius, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, String order) {
         log("geoSearchWithDistanceAsync", key, longitude, latitude, radius, geoUnit, order);
-        return rGeos.geoSearchWithDistanceAsync(key, longitude, latitude, radius, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, longitude, latitude, radius, geoUnit, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         log("geoSearchWithDistance", key, longitude, latitude, radius, geoUnit, count, order);
-        return rGeos.geoSearchWithDistance(key, longitude, latitude, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistance(key, longitude, latitude, radius, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         log("geoSearchWithDistanceAsync", key, longitude, latitude, radius, geoUnit, count, order);
-        return rGeos.geoSearchWithDistanceAsync(key, longitude, latitude, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, longitude, latitude, radius, geoUnit, count, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double width, double height, String geoUnit, String order) {
         log("geoSearchWithDistance", key, longitude, latitude, width, height, geoUnit, order);
-        return rGeos.geoSearchWithDistance(key, longitude, latitude, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistance(key, longitude, latitude, width, height, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, String order) {
         log("geoSearchWithDistanceAsync", key, longitude, latitude, width, height, geoUnit, order);
-        return rGeos.geoSearchWithDistanceAsync(key, longitude, latitude, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, longitude, latitude, width, height, geoUnit, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         log("geoSearchWithDistance", key, longitude, latitude, width, height, geoUnit, count, order);
-        return rGeos.geoSearchWithDistance(key, longitude, latitude, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistance(key, longitude, latitude, width, height, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         log("geoSearchWithDistanceAsync", key, longitude, latitude, width, height, geoUnit, count, order);
-        return rGeos.geoSearchWithDistanceAsync(key, longitude, latitude, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, longitude, latitude, width, height, geoUnit, count, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, Object member, double radius, String geoUnit, String order) {
         log("geoSearchWithDistance", key, member, radius, geoUnit, order);
-        return rGeos.geoSearchWithDistance(key, member, radius, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistance(key, member, radius, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double radius, String geoUnit, String order) {
         log("geoSearchWithDistanceAsync", key, member, radius, geoUnit, order);
-        return rGeos.geoSearchWithDistanceAsync(key, member, radius, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, member, radius, geoUnit, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, Object member, double radius, String geoUnit, int count, String order) {
         log("geoSearchWithDistance", key, member, radius, geoUnit, count, order);
-        return rGeos.geoSearchWithDistance(key, member, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistance(key, member, radius, geoUnit, count, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double radius, String geoUnit, int count, String order) {
         log("geoSearchWithDistanceAsync", key, member, radius, geoUnit, count, order);
-        return rGeos.geoSearchWithDistanceAsync(key, member, radius, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, member, radius, geoUnit, count, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, Object member, double width, double height, String geoUnit, String order) {
         log("geoSearchWithDistance", key, member, width, height, geoUnit, order);
-        return rGeos.geoSearchWithDistance(key, member, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistance(key, member, width, height, geoUnit, order);
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double width, double height, String geoUnit, String order) {
         log("geoSearchWithDistanceAsync", key, member, width, height, geoUnit, order);
-        return rGeos.geoSearchWithDistanceAsync(key, member, width, height, geoUnit, order);
+        return kRedissonGeo.geoSearchWithDistanceAsync(key, member, width, height, geoUnit, order);
     }
 
     @Override
     public Map<Object, Double> geoSearchWithDistance(String key, Object member, double width, double height, String geoUnit, int count, String order) {
         log("geoSearchWithDistance", key, member, width, height, geoUnit, count, order);
-        return rGeos.geoSearchWithDistance(key, member, width, height, geoUnit, count, order);
+        return kRedissonGeo.geoSearchWithDistance(key, member, width, height, geoUnit, count, order);
+    }
+
+    @Override
+    public KBatch createBatch() {
+        return new KRedissonBatch(redissonClient.createBatch());
     }
 
     @Override
     public Map<String, Boolean> hDel(String key, String... fields) {
         log("hDel", key, fields);
-        return rHash.hDel(key, fields);
+        return kMap.hDel(key, fields);
     }
 
     @Override
     public CompletableFuture<Long> hDelAsync(String key, String... fields) {
         log("hDelAsync", key, fields);
-        return rHash.hDelAsync(key, fields);
+        return kMap.hDelAsync(key, fields);
     }
 
     @Override
     public Map<String, Boolean> hExists(String key, String... fields) {
         log("hExists", key, fields);
-        return rHash.hExists(key, fields);
+        return kMap.hExists(key, fields);
     }
 
     @Override
     public Map<String, CompletableFuture<Boolean>> hExistsAsync(String key, String... fields) {
         log("hExistsAsync", key, fields);
-        return rHash.hExistsAsync(key, fields);
+        return kMap.hExistsAsync(key, fields);
     }
 
     @Override
     public Optional<Object> hGet(String key, String field) {
         log("hGet", key, field);
-        return rHash.hGet(key, field);
+        return kMap.hGet(key, field);
     }
 
     @Override
     public CompletableFuture<Object> hGetAsync(String key, String field) {
         log("hGetAsync", key, field);
-        return rHash.hGetAsync(key, field);
+        return kMap.hGetAsync(key, field);
     }
 
     @Override
     public Map<Object, Object> hGetAll(String key) {
         log("hGetAll", key);
-        return rHash.hGetAll(key);
+        return kMap.hGetAll(key);
     }
 
     @Override
     public CompletableFuture<Map<Object, Object>> hGetAllAsync(String key) {
         log("hGetAllAsync", key);
-        return rHash.hGetAllAsync(key);
+        return kMap.hGetAllAsync(key);
     }
 
     @Override
     public Object hIncrBy(String key, String field, Number value) {
         log("hIncrBy", key, field, value);
-        return rHash.hIncrBy(key, field, value);
+        return kMap.hIncrBy(key, field, value);
     }
 
     @Override
     public CompletableFuture<Object> hIncrByAsync(String key, String field, Number value) {
         log("hIncrByAsync", key, field, value);
-        return rHash.hIncrByAsync(key, field, value);
+        return kMap.hIncrByAsync(key, field, value);
     }
 
     @Override
     public Collection<Object> hKeys(String key) {
         log("hKeys", key);
-        return rHash.hKeys(key);
+        return kMap.hKeys(key);
     }
 
     @Override
     public CompletableFuture<Set<Object>> hKeysAsync(String key) {
         log("hKeysAsync", key);
-        return rHash.hKeysAsync(key);
+        return kMap.hKeysAsync(key);
     }
 
     @Override
     public int hLen(String key) {
         log("hLen", key);
-        return rHash.hLen(key);
+        return kMap.hLen(key);
     }
 
     @Override
     public CompletableFuture<Integer> hLenAsync(String key) {
         log("hLenAsync", key);
-        return rHash.hLenAsync(key);
+        return kMap.hLenAsync(key);
     }
 
     @Override
@@ -574,157 +589,157 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
         if (null == fields || fields.isEmpty()) {
             return Collections.emptyMap();
         }
-        return rHash.hmGet(key, fields);
+        return kMap.hmGet(key, fields);
     }
 
     @Override
     public CompletableFuture<Map<Object, Object>> hmGetAsync(String key, Set<Object> fields) {
         log("hmGet", key);
-        return rHash.hmGetAsync(key, fields);
+        return kMap.hmGetAsync(key, fields);
     }
 
     @Override
     public void hmSet(String key, Map<?, ?> kvMap) {
         log("hmSet", key, kvMap);
-        rHash.hmSet(key, kvMap);
+        kMap.hmSet(key, kvMap);
     }
 
     @Override
     public CompletableFuture<Void> hmSetAsync(String key, Map<?, ?> kvMap) {
         log("hmSetAsync", key, kvMap);
-        return rHash.hmSetAsync(key, kvMap);
+        return kMap.hmSetAsync(key, kvMap);
     }
 
     @Override
     public Set<Object> hRandField(String key, int count) {
         log("hRandField", key, count);
-        return rHash.hRandField(key, count);
+        return kMap.hRandField(key, count);
     }
 
     @Override
     public CompletableFuture<Set<Object>> hRandFieldsAsync(String key, int count) {
         log("hRandFieldsAsync", key, count);
-        return rHash.hRandFieldsAsync(key, count);
+        return kMap.hRandFieldsAsync(key, count);
     }
 
     @Override
     public Map<Object, Object> hRandFieldWithValues(String key, int count) {
         log("hRandFieldWithValues", key, count);
-        return rHash.hRandFieldWithValues(key, count);
+        return kMap.hRandFieldWithValues(key, count);
     }
 
     @Override
     public CompletableFuture<Map<Object, Object>> hRandFieldWithValuesAsync(String key, int count) {
         log("hRandFieldWithValuesAsync", key, count);
-        return rHash.hRandFieldWithValuesAsync(key, count);
+        return kMap.hRandFieldWithValuesAsync(key, count);
     }
 
     @Override
     public Iterator<Map.Entry<Object, Object>> hScan(String key, String keyPattern) {
         log("hScan", key, keyPattern);
-        return rHash.hScan(key, keyPattern);
+        return kMap.hScan(key, keyPattern);
     }
 
     @Override
     public Iterator<Map.Entry<Object, Object>> hScan(String key, String keyPattern, int count) {
         log("hScan", key, keyPattern, count);
-        return rHash.hScan(key, keyPattern, count);
+        return kMap.hScan(key, keyPattern, count);
     }
 
     @Override
     public void hSet(String key, String field, Object value) {
         log("hSet", key, field, value);
-        rHash.hSet(key, field, value);
+        kMap.hSet(key, field, value);
     }
 
     @Override
     public CompletableFuture<Boolean> hSetAsync(String key, String field, Object value) {
         log("hSetAsync", key, field, value);
-        return rHash.hSetAsync(key, field, value);
+        return kMap.hSetAsync(key, field, value);
     }
 
     @Override
     public void hSetNX(String key, String field, Object value) {
         log("hSetNX", key, field, value);
-        rHash.hSetNX(key, field, value);
+        kMap.hSetNX(key, field, value);
     }
 
     @Override
     public CompletableFuture<Boolean> hSetNXAsync(String key, String field, Object value) {
         log("hSetNXAsync", key, field, value);
-        return rHash.hSetNXAsync(key, field, value);
+        return kMap.hSetNXAsync(key, field, value);
     }
 
     @Override
     public int hStrLen(String key, String field) {
         log("hStrLen", key, field);
-        return rHash.hStrLen(key, field);
+        return kMap.hStrLen(key, field);
     }
 
     @Override
     public CompletableFuture<Integer> hStrLenAsync(String key, String field) {
         log("hStrLenAsync", key, field);
-        return rHash.hStrLenAsync(key, field);
+        return kMap.hStrLenAsync(key, field);
     }
 
     @Override
     public Collection<Object> hVALs(String key) {
         log("hVALs", key);
-        return rHash.hVALs(key);
+        return kMap.hVALs(key);
     }
 
     @Override
     public CompletableFuture<Collection<Object>> hVALsAsync(String key) {
         log("hVALsAsync", key);
-        return rHash.hVALsAsync(key);
+        return kMap.hVALsAsync(key);
     }
 
     @Override
     public boolean pfAdd(String key, Collection<Object> elements) {
         log("pfAdd", key, elements);
-        return rHyperLogLog.pfAdd(key, elements);
+        return kHyperLogLog.pfAdd(key, elements);
     }
 
     @Override
     public CompletableFuture<Boolean> pfAddAsync(String key, Collection<Object> elements) {
         log("pfAddAsync", key, elements);
-        return rHyperLogLog.pfAddAsync(key, elements);
+        return kHyperLogLog.pfAddAsync(key, elements);
     }
 
     @Override
     public long pfCount(String key) {
         log("pfCount", key);
-        return rHyperLogLog.pfCount(key);
+        return kHyperLogLog.pfCount(key);
     }
 
     @Override
     public CompletableFuture<Long> pfCountAsync(String key) {
         log("pfCountAsync", key);
-        return rHyperLogLog.pfCountAsync(key);
+        return kHyperLogLog.pfCountAsync(key);
     }
 
     @Override
     public long pfCount(String key, String... otherKeys) {
         log("pfCount", key, otherKeys);
-        return rHyperLogLog.pfCount(key, otherKeys);
+        return kHyperLogLog.pfCount(key, otherKeys);
     }
 
     @Override
     public CompletableFuture<Long> pfCountAsync(String key, String... otherKeys) {
         log("pfCountAsync", key, otherKeys);
-        return rHyperLogLog.pfCountAsync(key, otherKeys);
+        return kHyperLogLog.pfCountAsync(key, otherKeys);
     }
 
     @Override
     public void pfMerge(String destKey, String... sourceKeys) {
         log("pfMerge", destKey, sourceKeys);
-        rHyperLogLog.pfMerge(destKey, sourceKeys);
+        kHyperLogLog.pfMerge(destKey, sourceKeys);
     }
 
     @Override
     public CompletableFuture<Void> pfMergeAsync(String destKey, String... sourceKeys) {
         log("pfMergeAsync", destKey, sourceKeys);
-        return rHyperLogLog.pfMergeAsync(destKey, sourceKeys);
+        return kHyperLogLog.pfMergeAsync(destKey, sourceKeys);
     }
 
     @Override
@@ -2255,109 +2270,109 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public long exists(String... keys) {
         log("exists", keys);
-        return rGeneric.exists(keys);
+        return kGeneric.exists(keys);
     }
 
     @Override
     public CompletableFuture<Long> existsAsync(String... keys) {
         log("existsAsync", keys);
-        return rGeneric.existsAsync(keys);
+        return kGeneric.existsAsync(keys);
     }
 
     @Override
     public boolean expire(String key, long timeToLive, TimeUnit timeUnit) {
         log("expire", key, timeToLive, timeUnit);
-        return rGeneric.expire(key, timeToLive, timeUnit);
+        return kGeneric.expire(key, timeToLive, timeUnit);
     }
 
     @Override
     public CompletableFuture<Boolean> expireAsync(String key, long timeToLive, TimeUnit timeUnit) {
         log("expireAsync", key, timeToLive, timeUnit);
-        return rGeneric.expireAsync(key, timeToLive, timeUnit).toCompletableFuture();
+        return kGeneric.expireAsync(key, timeToLive, timeUnit).toCompletableFuture();
     }
 
     @Override
     public boolean expireAt(String key, long timestamp) {
         log("expireAt", key, timestamp);
-        return rGeneric.expireAt(key, timestamp);
+        return kGeneric.expireAt(key, timestamp);
     }
 
     @Override
     public CompletableFuture<Boolean> expireAtAsync(String key, long timestamp) {
         log("expireAtAsync", key, timestamp);
-        return rGeneric.expireAtAsync(key, timestamp).toCompletableFuture();
+        return kGeneric.expireAtAsync(key, timestamp).toCompletableFuture();
     }
 
     @Override
     public long del(String... keys) {
         log("del", keys);
-        return rGeneric.del(keys);
+        return kGeneric.del(keys);
     }
 
     @Override
     public CompletableFuture<Long> delAsync(String... keys) {
         log("delAsync", keys);
-        return rGeneric.delAsync(keys);
+        return kGeneric.delAsync(keys);
     }
 
     @Override
     public long unlink(String... keys) {
         log("unlink", keys);
-        return rGeneric.unlink(keys);
+        return kGeneric.unlink(keys);
     }
 
     @Override
     public CompletableFuture<Long> unlinkAsync(String... keys) {
         log("unlinkAsync", keys);
-        return rGeneric.unlinkAsync(keys).toCompletableFuture();
+        return kGeneric.unlinkAsync(keys).toCompletableFuture();
     }
 
     @Override
     public long ttl(String key) {
         log("ttl", key);
-        return rGeneric.ttl(key);
+        return kGeneric.ttl(key);
     }
 
     @Override
     public CompletableFuture<Long> ttlAsync(String key) {
         log("ttlAsync", key);
-        return rGeneric.ttlAsync(key);
+        return kGeneric.ttlAsync(key);
     }
 
     @Override
     public long pTTL(String key) {
         log("pTTL", key);
-        return rGeneric.pTTL(key);
+        return kGeneric.pTTL(key);
     }
 
     @Override
     public CompletableFuture<Long> pTTLAsync(String key) {
         log("pTTLAsync", key);
-        return rGeneric.pTTLAsync(key);
+        return kGeneric.pTTLAsync(key);
     }
 
     @Override
     public Iterable<String> scan(String keyPattern) {
         log("scan", keyPattern);
-        return rGeneric.scan(keyPattern);
+        return kGeneric.scan(keyPattern);
     }
 
     @Override
     public Iterable<String> scan(String keyPattern, int count) {
         log("scan", keyPattern, count);
-        return rGeneric.scan(keyPattern, count);
+        return kGeneric.scan(keyPattern, count);
     }
 
     @Override
     public KeyType type(String key) {
         log("type", key);
-        return rGeneric.type(key);
+        return kGeneric.type(key);
     }
 
     @Override
     public CompletableFuture<KeyType> typeAsync(String key) {
         log("typeAsync", key);
-        return rGeneric.typeAsync(key);
+        return kGeneric.typeAsync(key);
     }
 
     @Override
