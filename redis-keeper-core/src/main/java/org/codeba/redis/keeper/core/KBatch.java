@@ -58,6 +58,40 @@ public interface KBatch {
      */
     KHyperLogLogAsync getHyperLogLog();
 
+    /**
+     * Gets list.
+     *
+     * @return the list
+     */
+    KListAsync getList();
+
+    /**
+     * Gets set.
+     *
+     * @return the set
+     */
+    KSetAsync getSet();
+
+    /**
+     * Gets sorted set.
+     *
+     * @return the sorted set
+     */
+    KZSetAsync getSortedSet();
+
+    /**
+     * Gets string.
+     *
+     * @return the string
+     */
+    KStringAsync getString();
+
+    /**
+     * Gets script.
+     *
+     * @return the script
+     */
+    KScriptAsync getScript();
 
     /**
      * Execute.

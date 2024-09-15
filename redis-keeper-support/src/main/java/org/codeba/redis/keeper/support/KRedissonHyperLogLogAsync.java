@@ -51,22 +51,22 @@ class KRedissonHyperLogLogAsync extends BaseAsync implements KHyperLogLogAsync {
 
     @Override
     public CompletableFuture<Boolean> pfAddAsync(String key, Collection<Object> elements) {
-        return getHyperLogLogAsync(key).addAllAsync(elements).toCompletableFuture();
+        return getHyperLogLog(key).addAllAsync(elements).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> pfCountAsync(String key) {
-        return getHyperLogLogAsync(key).countAsync().toCompletableFuture();
+        return getHyperLogLog(key).countAsync().toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> pfCountAsync(String key, String... otherKeys) {
-        return getHyperLogLogAsync(key).countWithAsync(otherKeys).toCompletableFuture();
+        return getHyperLogLog(key).countWithAsync(otherKeys).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Void> pfMergeAsync(String destKey, String... sourceKeys) {
-        return getHyperLogLogAsync(destKey).mergeWithAsync(sourceKeys).toCompletableFuture();
+        return getHyperLogLog(destKey).mergeWithAsync(sourceKeys).toCompletableFuture();
     }
 
     /**
@@ -76,9 +76,9 @@ class KRedissonHyperLogLogAsync extends BaseAsync implements KHyperLogLogAsync {
      * @param key the key
      * @return the hyper log async
      */
-    protected <V> RHyperLogLogAsync<V> getHyperLogLogAsync(String key) {
-        if (null != getrBatch()) {
-            return getrBatch().getHyperLogLog(key, getCodec());
+    private <V> RHyperLogLogAsync<V> getHyperLogLog(String key) {
+        if (null != getBatch()) {
+            return getBatch().getHyperLogLog(key, getCodec());
         } else {
             return getRedissonClient().getHyperLogLog(key, getCodec());
         }

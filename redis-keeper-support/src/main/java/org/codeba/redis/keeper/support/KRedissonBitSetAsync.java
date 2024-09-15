@@ -47,42 +47,42 @@ class KRedissonBitSetAsync extends BaseAsync implements KBitSetAsync {
 
     @Override
     public CompletableFuture<Long> bitCountAsync(String key) {
-        return getRBitSetAsync(key).cardinalityAsync().toCompletableFuture();
+        return getRBitSet(key).cardinalityAsync().toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> bitFieldSetSignedAsync(String key, int size, long offset, long value) {
-        return getRBitSetAsync(key).setSignedAsync(size, offset, value).toCompletableFuture();
+        return getRBitSet(key).setSignedAsync(size, offset, value).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> bitFieldSetUnSignedAsync(String key, int size, long offset, long value) {
-        return getRBitSetAsync(key).setUnsignedAsync(size, offset, value).toCompletableFuture();
+        return getRBitSet(key).setUnsignedAsync(size, offset, value).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> bitFieldGetSignedAsync(String key, int size, long offset) {
-        return getRBitSetAsync(key).getSignedAsync(size, offset).toCompletableFuture();
+        return getRBitSet(key).getSignedAsync(size, offset).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> bitFieldGetUnSignedAsync(String key, int size, long offset) {
-        return getRBitSetAsync(key).getUnsignedAsync(size, offset).toCompletableFuture();
+        return getRBitSet(key).getUnsignedAsync(size, offset).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Void> bitOpOrAsync(String destKey, String... keys) {
-        return getRBitSetAsync(destKey).orAsync(keys).toCompletableFuture();
+        return getRBitSet(destKey).orAsync(keys).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> getBitAsync(String key, long bitIndex) {
-        return getRBitSetAsync(key).getAsync(bitIndex).toCompletableFuture();
+        return getRBitSet(key).getAsync(bitIndex).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> setBitAsync(String key, long offset, boolean value) {
-        return getRBitSetAsync(key).setAsync(offset, value).toCompletableFuture();
+        return getRBitSet(key).setAsync(offset, value).toCompletableFuture();
     }
 
     /**
@@ -91,9 +91,9 @@ class KRedissonBitSetAsync extends BaseAsync implements KBitSetAsync {
      * @param key the key
      * @return the r bit set
      */
-    protected RBitSetAsync getRBitSetAsync(String key) {
-        if (null != getrBatch()) {
-            return super.getrBatch().getBitSet(key);
+    private RBitSetAsync getRBitSet(String key) {
+        if (null != getBatch()) {
+            return super.getBatch().getBitSet(key);
         } else {
             return super.getRedissonClient().getBitSet(key);
         }

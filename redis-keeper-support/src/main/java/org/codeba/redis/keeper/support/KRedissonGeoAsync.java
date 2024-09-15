@@ -69,27 +69,27 @@ class KRedissonGeoAsync extends BaseAsync implements KGeoAsync {
 
     @Override
     public CompletableFuture<Long> geoAddAsync(String key, double longitude, double latitude, Object member) {
-        return getGeoAsync(key).addAsync(longitude, latitude, member).toCompletableFuture();
+        return getGeo(key).addAsync(longitude, latitude, member).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> geoAddXXAsync(String key, double longitude, double latitude, Object member) {
-        return getGeoAsync(key).addIfExistsAsync(longitude, latitude, member).toCompletableFuture();
+        return getGeo(key).addIfExistsAsync(longitude, latitude, member).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Double> geoDistAsync(String key, Object firstMember, Object secondMember, String geoUnit) {
-        return getGeoAsync(key).distAsync(firstMember, secondMember, parseGeoUnit(geoUnit)).toCompletableFuture();
+        return getGeo(key).distAsync(firstMember, secondMember, parseGeoUnit(geoUnit)).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, String>> geoHashAsync(String key, Object... members) {
-        return getGeoAsync(key).hashAsync(members).toCompletableFuture();
+        return getGeo(key).hashAsync(members).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, double[]>> geoPosAsync(String key, Object... members) {
-        final RFuture<Map<Object, GeoPosition>> mapRFuture = getGeoAsync(key).posAsync(members);
+        final RFuture<Map<Object, GeoPosition>> mapRFuture = getGeo(key).posAsync(members);
         return mapRFuture.handle((pos, e) -> {
             if (null != e) {
                 log.error("cmd:" + key + ", params:" + Arrays.toString(members), e);
@@ -101,97 +101,97 @@ class KRedissonGeoAsync extends BaseAsync implements KGeoAsync {
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoRadiusAsync(String key, double longitude, double latitude, double radius, String geoUnit) {
-        return getGeoAsync(key).radiusWithDistanceAsync(longitude, latitude, radius, parseGeoUnit(geoUnit)).toCompletableFuture();
+        return getGeo(key).radiusWithDistanceAsync(longitude, latitude, radius, parseGeoUnit(geoUnit)).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double radius, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(longitude, latitude, radius, geoUnit, order);
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).radius(radius, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).box(width, height, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).box(width, height, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double radius, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).radius(radius, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double radius, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).radius(radius, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).box(width, height, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<List<Object>> geoSearchAsync(String key, Object member, double width, double height, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).box(width, height, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchAsync(search).toCompletableFuture();
+        return getGeo(key).searchAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).radius(radius, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double radius, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).radius(radius, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).box(width, height, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, double longitude, double latitude, double width, double height, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(longitude, latitude).box(width, height, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double radius, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).radius(radius, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double radius, String geoUnit, int count, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).radius(radius, parseGeoUnit(geoUnit)).count(count));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Double>> geoSearchWithDistanceAsync(String key, Object member, double width, double height, String geoUnit, String order) {
         final OptionalGeoSearch search = getOptionalGeoSearch(order, GeoSearchArgs.from(member).box(width, height, parseGeoUnit(geoUnit)));
-        return getGeoAsync(key).searchWithDistanceAsync(search).toCompletableFuture();
+        return getGeo(key).searchWithDistanceAsync(search).toCompletableFuture();
     }
 
     /**
@@ -260,9 +260,9 @@ class KRedissonGeoAsync extends BaseAsync implements KGeoAsync {
      * @param key the key
      * @return the geo async
      */
-    private <V> RGeoAsync<V> getGeoAsync(String key) {
-        if (null != getrBatch()) {
-            return super.getrBatch().getGeo(key, getCodec());
+    private <V> RGeoAsync<V> getGeo(String key) {
+        if (null != getBatch()) {
+            return super.getBatch().getGeo(key, getCodec());
         } else {
             return super.getRedissonClient().getGeo(key, getCodec());
         }

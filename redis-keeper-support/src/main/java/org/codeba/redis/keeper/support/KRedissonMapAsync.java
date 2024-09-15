@@ -55,12 +55,12 @@ class KRedissonMapAsync extends BaseAsync implements KMapAsync {
 
     @Override
     public CompletableFuture<Long> hDelAsync(String key, String... fields) {
-        return getMapAsync(key).fastRemoveAsync(fields).toCompletableFuture();
+        return getMap(key).fastRemoveAsync(fields).toCompletableFuture();
     }
 
     @Override
     public Map<String, CompletableFuture<Boolean>> hExistsAsync(String key, String... fields) {
-        final RMapAsync<Object, Object> rMap = getMapAsync(key);
+        final RMapAsync<Object, Object> rMap = getMap(key);
 
         final HashMap<String, CompletableFuture<Boolean>> resultMap = new HashMap<>();
         for (String field : fields) {
@@ -72,67 +72,67 @@ class KRedissonMapAsync extends BaseAsync implements KMapAsync {
 
     @Override
     public CompletableFuture<Object> hGetAsync(String key, String field) {
-        return getMapAsync(key).getAsync(field).toCompletableFuture();
+        return getMap(key).getAsync(field).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Object>> hGetAllAsync(String key) {
-        return getMapAsync(key).readAllMapAsync().toCompletableFuture();
+        return getMap(key).readAllMapAsync().toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Object> hIncrByAsync(String key, String field, Number value) {
-        return getMapAsync(key).addAndGetAsync(field, value).toCompletableFuture();
+        return getMap(key).addAndGetAsync(field, value).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Set<Object>> hKeysAsync(String key) {
-        return getMapAsync(key).readAllKeySetAsync().toCompletableFuture();
+        return getMap(key).readAllKeySetAsync().toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Integer> hLenAsync(String key) {
-        return getMapAsync(key).sizeAsync().toCompletableFuture();
+        return getMap(key).sizeAsync().toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Object>> hmGetAsync(String key, Set<Object> fields) {
-        return getMapAsync(key).getAllAsync(fields).toCompletableFuture();
+        return getMap(key).getAllAsync(fields).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Void> hmSetAsync(String key, Map<?, ?> kvMap) {
-        return getMapAsync(key).putAllAsync(kvMap, 100).toCompletableFuture();
+        return getMap(key).putAllAsync(kvMap, 100).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> hSetAsync(String key, String field, Object value) {
-        return getMapAsync(key).fastPutAsync(field, value).toCompletableFuture();
+        return getMap(key).fastPutAsync(field, value).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Set<Object>> hRandFieldsAsync(String key, int count) {
-        return getMapAsync(key).randomKeysAsync(count).toCompletableFuture();
+        return getMap(key).randomKeysAsync(count).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Map<Object, Object>> hRandFieldWithValuesAsync(String key, int count) {
-        return getMapAsync(key).randomEntriesAsync(count).toCompletableFuture();
+        return getMap(key).randomEntriesAsync(count).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> hSetNXAsync(String key, String field, Object value) {
-        return getMapAsync(key).fastPutIfAbsentAsync(field, value).toCompletableFuture();
+        return getMap(key).fastPutIfAbsentAsync(field, value).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Integer> hStrLenAsync(String key, String field) {
-        return getMapAsync(key).valueSizeAsync(field).toCompletableFuture();
+        return getMap(key).valueSizeAsync(field).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Collection<Object>> hVALsAsync(String key) {
-        return getMapAsync(key).readAllValuesAsync().toCompletableFuture();
+        return getMap(key).readAllValuesAsync().toCompletableFuture();
     }
 
     /**
@@ -143,9 +143,9 @@ class KRedissonMapAsync extends BaseAsync implements KMapAsync {
      * @param key the key
      * @return the map async
      */
-    protected <K, V> RMapAsync<K, V> getMapAsync(String key) {
-        if (null != getrBatch()) {
-            return getrBatch().getMap(key, getCodec());
+    private <K, V> RMapAsync<K, V> getMap(String key) {
+        if (null != getBatch()) {
+            return getBatch().getMap(key, getCodec());
         } else {
             return getRedissonClient().getMap(key, getCodec());
         }

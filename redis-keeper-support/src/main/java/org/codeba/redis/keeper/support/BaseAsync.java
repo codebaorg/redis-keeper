@@ -23,7 +23,7 @@ import org.redisson.client.codec.Codec;
 /**
  * The type Base async.
  */
-public class BaseAsync {
+class BaseAsync {
     /**
      * The Redisson client.
      */
@@ -31,7 +31,7 @@ public class BaseAsync {
     /**
      * The R batch.
      */
-    private RBatch rBatch;
+    private RBatch batch;
     /**
      * The Codec.
      */
@@ -60,21 +60,21 @@ public class BaseAsync {
     /**
      * Instantiates a new Base async.
      *
-     * @param rBatch the r batch
-     * @param codec  the codec
+     * @param batch the r batch
+     * @param codec the codec
      */
-    public BaseAsync(RBatch rBatch, Codec codec) {
-        this.rBatch = rBatch;
+    public BaseAsync(RBatch batch, Codec codec) {
+        this.batch = batch;
         this.codec = codec;
     }
 
     /**
      * Instantiates a new Base async.
      *
-     * @param rBatch the r batch
+     * @param batch the r batch
      */
-    public BaseAsync(RBatch rBatch) {
-        this.rBatch = rBatch;
+    public BaseAsync(RBatch batch) {
+        this.batch = batch;
     }
 
     /**
@@ -91,8 +91,8 @@ public class BaseAsync {
      *
      * @return the batch
      */
-    public RBatch getrBatch() {
-        return rBatch;
+    public RBatch getBatch() {
+        return batch;
     }
 
     /**

@@ -21,9 +21,13 @@ import org.codeba.redis.keeper.core.KBitSetAsync;
 import org.codeba.redis.keeper.core.KGenericAsync;
 import org.codeba.redis.keeper.core.KGeoAsync;
 import org.codeba.redis.keeper.core.KHyperLogLogAsync;
+import org.codeba.redis.keeper.core.KListAsync;
 import org.codeba.redis.keeper.core.KMapAsync;
+import org.codeba.redis.keeper.core.KScriptAsync;
+import org.codeba.redis.keeper.core.KSetAsync;
+import org.codeba.redis.keeper.core.KStringAsync;
+import org.codeba.redis.keeper.core.KZSetAsync;
 import org.redisson.api.RBatch;
-import org.redisson.client.codec.Codec;
 import org.redisson.client.codec.StringCodec;
 
 import java.util.List;
@@ -33,11 +37,6 @@ import java.util.concurrent.CompletableFuture;
  * The type K redisson batch.
  */
 class KRedissonBatch implements KBatch {
-
-    /**
-     * The Codec.
-     */
-    private final Codec codec = new StringCodec();
     /**
      * The R batch.
      */
@@ -64,19 +63,43 @@ class KRedissonBatch implements KBatch {
 
     @Override
     public KGeoAsync getGeo() {
-        return new KRedissonGeoAsync(rBatch, codec);
+        return new KRedissonGeoAsync(rBatch, StringCodec.INSTANCE);
     }
 
     @Override
     public KMapAsync getHash() {
-        return new KRedissonMapAsync(rBatch, codec);
+        return new KRedissonMapAsync(rBatch, StringCodec.INSTANCE);
     }
 
     @Override
     public KHyperLogLogAsync getHyperLogLog() {
-        return new KRedissonHyperLogLogAsync(rBatch, codec);
+        return new KRedissonHyperLogLogAsync(rBatch, StringCodec.INSTANCE);
     }
 
+    @Override
+    public KListAsync getList() {
+        return new KRedissonListAsync(rBatch, StringCodec.INSTANCE);
+    }
+
+    @Override
+    public KSetAsync getSet() {
+        return new KRedissonSetAsync(rBatch, StringCodec.INSTANCE);
+    }
+
+    @Override
+    public KZSetAsync getSortedSet() {
+        return new KRedissonZSetAsync(rBatch, StringCodec.INSTANCE);
+    }
+
+    @Override
+    public KStringAsync getString() {
+        return new KRedissonStringAsync(rBatch, StringCodec.INSTANCE);
+    }
+
+    @Override
+    public KScriptAsync getScript() {
+        return new KRedissonScriptAsync(rBatch, StringCodec.INSTANCE);
+    }
 
     @Override
     public void execute() {

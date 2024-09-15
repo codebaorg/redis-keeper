@@ -66,32 +66,32 @@ class KRedissonGenericAsync extends BaseAsync implements KGenericAsync {
 
     @Override
     public CompletableFuture<Long> existsAsync(String... keys) {
-        return getRKeysAsync().countExistsAsync(keys).toCompletableFuture();
+        return getRKeys().countExistsAsync(keys).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> expireAsync(String key, long timeToLive, TimeUnit timeUnit) {
-        return getRKeysAsync().expireAsync(key, timeToLive, timeUnit).toCompletableFuture();
+        return getRKeys().expireAsync(key, timeToLive, timeUnit).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Boolean> expireAtAsync(String key, long timestamp) {
-        return getRKeysAsync().expireAtAsync(key, timestamp).toCompletableFuture();
+        return getRKeys().expireAtAsync(key, timestamp).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> delAsync(String... keys) {
-        return getRKeysAsync().deleteAsync(keys).toCompletableFuture();
+        return getRKeys().deleteAsync(keys).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> unlinkAsync(String... keys) {
-        return getRKeysAsync().unlinkAsync(keys).toCompletableFuture();
+        return getRKeys().unlinkAsync(keys).toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<Long> ttlAsync(String key) {
-        return getRBucketAsync(key).remainTimeToLiveAsync()
+        return getRBucket(key).remainTimeToLiveAsync()
                 .handle((v, e) -> {
                     if (null != e) {
                         log("ttlAsync", key, e);
@@ -104,12 +104,12 @@ class KRedissonGenericAsync extends BaseAsync implements KGenericAsync {
 
     @Override
     public CompletableFuture<Long> pTTLAsync(String key) {
-        return getRBucketAsync(key).remainTimeToLiveAsync().toCompletableFuture();
+        return getRBucket(key).remainTimeToLiveAsync().toCompletableFuture();
     }
 
     @Override
     public CompletableFuture<KeyType> typeAsync(String key) {
-        return getRKeysAsync().getTypeAsync(key)
+        return getRKeys().getTypeAsync(key)
                 .handle((type, e) -> {
                     if (null != e) {
                         log("typeAsync", key, e);
@@ -130,9 +130,9 @@ class KRedissonGenericAsync extends BaseAsync implements KGenericAsync {
      *
      * @return the keys async
      */
-    protected RKeysAsync getRKeysAsync() {
-        if (null != getrBatch()) {
-            return super.getrBatch().getKeys();
+    private RKeysAsync getRKeys() {
+        if (null != getBatch()) {
+            return super.getBatch().getKeys();
         } else {
             return super.getRedissonClient().getKeys();
         }
@@ -145,9 +145,9 @@ class KRedissonGenericAsync extends BaseAsync implements KGenericAsync {
      * @param key the key
      * @return the r bucket async
      */
-    protected <V> RBucketAsync<V> getRBucketAsync(String key) {
-        if (null != getrBatch()) {
-            return super.getrBatch().getBucket(key);
+    private <V> RBucketAsync<V> getRBucket(String key) {
+        if (null != getBatch()) {
+            return super.getBatch().getBucket(key);
         } else {
             return super.getRedissonClient().getBucket(key);
         }
