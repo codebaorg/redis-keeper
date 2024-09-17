@@ -7,7 +7,7 @@
 
 **支持 JDK: 1.8 ... 21**
 
-**支持 Redisson: 3.15.5 ... 3.27.0**
+**支持 Redisson: 3.15.5 ... 3.35.0**
 
 **支持 Redis: 3.0 ... 7.2**
 
@@ -25,24 +25,26 @@
     <dependency>
        <groupId>org.codeba</groupId>
        <artifactId>redis-keeper-core</artifactId>
-       <version>2024.1.0</version>
+       <version>2024.2.0</version>
     </dependency> 
 
     <dependency>
        <groupId>org.codeba</groupId>
        <artifactId>redis-keeper-support</artifactId>
-       <version>2024.1.0</version>
+       <version>2024.2.0</version>
     </dependency>
 
 #### Gradle
-    implementation group: 'org.codeba', name: 'redis-keeper-core', version: '2024.1.0'
 
-    implementation group: 'org.codeba', name: 'redis-keeper-support', version: '2024.1.0'
+    implementation group: 'org.codeba', name: 'redis-keeper-core', version: '2024.2.0'
+
+    implementation group: 'org.codeba', name: 'redis-keeper-support', version: '2024.2.0'
 
 #### Sbt
-    libraryDependencies += "org.codeba" % "redis-keeper-core" % "2024.1.0"
+
+    libraryDependencies += "org.codeba" % "redis-keeper-core" % "2024.2.0"
     
-    libraryDependencies += "org.codeba" % "redis-keeper-support" % "2024.1.0"
+    libraryDependencies += "org.codeba" % "redis-keeper-support" % "2024.2.0"
 
 
 #### Java
@@ -98,7 +100,7 @@ Optional<CacheTemplate> randomedTemplate = provider.randomTemplate("ds2");
 <dependency>
 	<groupId>org.codeba</groupId>
 	<artifactId>redis-keeper-spring-boot-starter</artifactId>
-	<version>2024.1.0</version>
+	<version>2024.2.0</version>
 </dependency>
 ```
 
@@ -201,6 +203,30 @@ public class AppTest {
         cacheTemplate.trySetRateLimiter(key, 100, 1);
         cacheTemplate.tryAcquire(key);
         cacheTemplate.tryAcquire(key, 10);
+        // pipeline execute
+        cacheTemplate.pipeline(kBatch -> {
+            kBatch.getString().setAsync(key, "bar");
+            kBatch.getGeo().geoAddAsync(key, 13.361389, 38.115556, "Sicily");
+            kBatch.getList().llenAsync(key);
+        });
+        // pipeline execute and get response
+        final List<?> responses = cacheTemplate.pipelineWithResponses(kBatch -> {
+            kBatch.getString().setAsync(key, "bar");
+            kBatch.getGeo().geoAddAsync(key, 13.361389, 38.115556, "Sicily");
+            kBatch.getList().llenAsync(key);
+        });
+        // pipeline execute async
+        final CompletableFuture<Void> voidCompletableFuture = cacheTemplate.pipelineAsync(kBatch -> {
+            kBatch.getString().setAsync(key, "bar");
+            kBatch.getGeo().geoAddAsync(key, 13.361389, 38.115556, "Sicily");
+            kBatch.getList().llenAsync(key);
+        });
+        // pipeline execute and get response async
+        final CompletableFuture<List<?>> listCompletableFuture = cacheTemplate.pipelineWithResponsesAsync(kBatch -> {
+            kBatch.getString().setAsync(key, "bar");
+            kBatch.getGeo().geoAddAsync(key, 13.361389, 38.115556, "Sicily");
+            kBatch.getList().llenAsync(key);
+        });
     }
 
 }
@@ -218,7 +244,7 @@ public class AppTest {
 <dependency>
 	<groupId>org.codeba</groupId>
 	<artifactId>redis-keeper-spring-boot-starter</artifactId>
-	<version>2024.1.0</version>
+	<version>2024.2.0</version>
 </dependency>
 ```
 
@@ -313,7 +339,7 @@ public class AppTest {
 <dependency>
 	<groupId>org.codeba</groupId>
 	<artifactId>redis-keeper-spring-boot-starter</artifactId>
-	<version>2024.1.0</version>
+	<version>2024.2.0</version>
 </dependency>
 ```
 
