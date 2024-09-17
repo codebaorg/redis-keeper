@@ -44,7 +44,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
         <redis-keeper.version>2024.2.0</redis-keeper.version>
-        <redisson.version>3.15.5</redisson.version>
+        <redisson.version>3.35.0</redisson.version>
 
         <spring.version>5.3.27</spring.version>
         <spring-boot.version>2.7.11</spring-boot.version>

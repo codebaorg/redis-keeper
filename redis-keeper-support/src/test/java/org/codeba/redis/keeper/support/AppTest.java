@@ -76,7 +76,7 @@ public class AppTest extends TestCase {
     static {
         // todo please set your address and password
         String yourAddress = "redis://localhost:6379";
-        String yourPass = "0JBE7Xtf3LxwoIp7";
+        String yourPass = "youPass";
         String properties = "redisKeeper:\n" +
                 "  redisson:\n" +
                 "    datasource:\n" +
