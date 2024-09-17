@@ -26,8 +26,18 @@ import junit.framework.TestSuite;
 import org.codeba.redis.keeper.core.CacheDatasourceStatus;
 import org.codeba.redis.keeper.core.CacheTemplate;
 import org.codeba.redis.keeper.core.CacheTemplateProvider;
+import org.codeba.redis.keeper.core.KBatch;
+import org.codeba.redis.keeper.core.KGenericAsync;
+import org.codeba.redis.keeper.core.KGeoAsync;
+import org.codeba.redis.keeper.core.KListAsync;
+import org.codeba.redis.keeper.core.KScriptAsync;
+import org.codeba.redis.keeper.core.KSetAsync;
+import org.codeba.redis.keeper.core.KStringAsync;
+import org.codeba.redis.keeper.core.KZSetAsync;
 import org.codeba.redis.keeper.core.KeyType;
 import org.redisson.codec.JsonJacksonCodec;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.security.NoSuchAlgorithmException;
@@ -53,6 +63,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Unit test for simple App.
  */
 public class AppTest extends TestCase {
+    private static final Logger log = LoggerFactory.getLogger(AppTest.class);
     /**
      * The constant CACHE_TEMPLATE.
      */
@@ -65,7 +76,7 @@ public class AppTest extends TestCase {
     static {
         // todo please set your address and password
         String yourAddress = "redis://localhost:6379";
-        String yourPass = "youPass";
+        String yourPass = "0JBE7Xtf3LxwoIp7";
         String properties = "redisKeeper:\n" +
                 "  redisson:\n" +
                 "    datasource:\n" +
@@ -256,6 +267,28 @@ public class AppTest extends TestCase {
         assertEquals(3, CACHE_TEMPLATE.bitCountAsync(key).join().intValue());
 
         CACHE_TEMPLATE.del(key);
+
+        final KBatch batch = CACHE_TEMPLATE.createBatch();
+        int[] offsets = {1, 2, 4};
+        for (int offset : offsets) {
+            batch.getBitMap().setBitAsync(key, offset, true);
+        }
+        batch.execute();
+
+        final KBatch batch2 = CACHE_TEMPLATE.createBatch();
+        for (int offset : offsets) {
+            batch2.getBitMap().getBitAsync(key, offset);
+        }
+        final List<?> responses = batch2.executeWithResponses();
+        for (Object response : responses) {
+            assertTrue((Boolean) response);
+        }
+
+        final KBatch batch3 = CACHE_TEMPLATE.createBatch();
+        batch3.getBitMap().bitCountAsync(key);
+        assertEquals(3, (long) batch3.executeWithResponsesAsync().join().get(0));
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -379,6 +412,16 @@ public class AppTest extends TestCase {
         assertEquals(1, CACHE_TEMPLATE.geoAddAsync(key, 15.087269, 37.502669, "Catania").join().intValue());
 
         CACHE_TEMPLATE.del(key);
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            final KGeoAsync geo = kBatch.getGeo();
+            geo.geoAddAsync(key, 13.361389, 38.115556, "Palermo");
+            geo.geoAddAsync(key, 15.087269, 37.502669, "Catania");
+        });
+        assertEquals(1, (long) responses.get(0));
+        assertEquals(1, (long) responses.get(1));
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -439,6 +482,13 @@ public class AppTest extends TestCase {
         final Map<Object, String> map2 = CACHE_TEMPLATE.geoHashAsync(key, "Palermo", "Catania").join();
         assertEquals("sqc8b49rny0", map2.get("Palermo"));
         assertEquals("sqdtr74hyu0", map2.get("Catania"));
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            kBatch.getGeo().geoHashAsync(key, "Palermo", "Catania");
+        });
+        final Map<Object, String> map3 = (Map<Object, String>) responses.get(0);
+        assertEquals("sqc8b49rny0", map3.get("Palermo"));
+        assertEquals("sqdtr74hyu0", map3.get("Catania"));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -852,6 +902,9 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.hSet(key, field1, "hello");
         CACHE_TEMPLATE.hSet(key, field2, "world");
 
+        final Map<Object, Object> objectObjectMap = CACHE_TEMPLATE.hmGet(key, null);
+        assertEquals(0, objectObjectMap.size());
+
         final Map<Object, Object> map = CACHE_TEMPLATE.hmGet(key, new HashSet<Object>() {{
             add(field1);
             add(field2);
@@ -869,6 +922,18 @@ public class AppTest extends TestCase {
         assertEquals("hello", map2.get(field1));
         assertEquals("world", map2.get(field2));
         assertNull(map2.get("nofield"));
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            kBatch.getHash().hmGetAsync(key, new HashSet<Object>() {{
+                add(field1);
+                add(field2);
+                add("nofield");
+            }});
+        });
+        final Map<Object, Object> map3 = (Map<Object, Object>) responses.get(0);
+        assertEquals("hello", map3.get(field1));
+        assertEquals("world", map3.get(field2));
+        assertNull(map3.get("nofield"));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -1514,6 +1579,22 @@ public class AppTest extends TestCase {
         assertEquals("five", objects.get(2));
 
         CACHE_TEMPLATE.del(key);
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            final KListAsync kBatchList = kBatch.getList();
+            kBatchList.rPushAsync(key, "one", "two", "three", "four", "five");
+            kBatchList.lPopAsync(key, 1);
+            kBatchList.lPopAsync(key, 1);
+            kBatchList.lPopAsync(key, 3);
+        });
+        assertTrue((boolean) responses.get(0));
+        assertEquals("one", ((List<Object>) responses.get(1)).get(0));
+        assertEquals("two", ((List<Object>) responses.get(2)).get(0));
+        assertEquals("three", ((List<Object>) responses.get(3)).get(0));
+        assertEquals("four", ((List<Object>) responses.get(3)).get(1));
+        assertEquals("five", ((List<Object>) responses.get(3)).get(2));
+
+        CACHE_TEMPLATE.del(key);
     }
 
     /**
@@ -2138,6 +2219,49 @@ public class AppTest extends TestCase {
         assertTrue(objects.contains("three"));
 
         CACHE_TEMPLATE.del(key);
+
+        // 2
+        assertTrue(CACHE_TEMPLATE.sAdd(key, list));
+
+        CACHE_TEMPLATE.pipelineAsync(kBatch -> {
+            final KSetAsync kBatchSet = kBatch.getSet();
+            kBatchSet.sRemAsync(key, Collections.singletonList("one"));
+            kBatchSet.sRemAsync(key, Arrays.asList("two", "four"));
+            kBatchSet.sRemAsync(key, Collections.singletonList("five"));
+        }).join();
+
+        assertTrue(CACHE_TEMPLATE.sMembers(key).contains("three"));
+
+        CACHE_TEMPLATE.del(key);
+
+        // 3
+        assertTrue(CACHE_TEMPLATE.sAdd(key, list));
+
+        CACHE_TEMPLATE.pipelineWithResponsesAsync(kBatch -> {
+            final KSetAsync kBatchSet = kBatch.getSet();
+            kBatchSet.sRemAsync(key, Collections.singletonList("one"));
+            kBatchSet.sRemAsync(key, Arrays.asList("two", "four"));
+            kBatchSet.sRemAsync(key, Collections.singletonList("five"));
+        }).whenComplete((r, throwable) -> {
+            if (null != throwable) {
+                log.error("测试分支", throwable);
+            }
+        }).join();
+
+        CACHE_TEMPLATE.del(key);
+
+        // 4
+        assertTrue(CACHE_TEMPLATE.sAdd(key, list));
+
+        CACHE_TEMPLATE.pipelineAsync(kBatch -> {
+            final KSetAsync kBatchSet = kBatch.getSet();
+            kBatchSet.sRemAsync(key, Collections.singletonList("one"));
+            kBatchSet.sRemAsync(key, Arrays.asList("two", "four"));
+            kBatchSet.sRemAsync(key, Collections.singletonList("five"));
+        }).join();
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
     /**
@@ -2471,6 +2595,14 @@ public class AppTest extends TestCase {
 
         assertEquals(3, CACHE_TEMPLATE.zCountAsync(key, Double.MIN_VALUE, true, Double.MAX_VALUE, true).join().intValue());
         assertEquals(2, CACHE_TEMPLATE.zCountAsync(key, 1, false, 3, true).join().intValue());
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            final KZSetAsync sortedSet = kBatch.getSortedSet();
+            sortedSet.zCountAsync(key, Double.MIN_VALUE, true, Double.MAX_VALUE, true);
+            sortedSet.zCountAsync(key, 1, false, 3, true);
+        });
+        assertEquals(3, (int) responses.get(0));
+        assertEquals(2, (int) responses.get(1));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -3803,6 +3935,11 @@ public class AppTest extends TestCase {
         assertEquals(6, CACHE_TEMPLATE.pfCount(key, key1));
         assertEquals(6, CACHE_TEMPLATE.pfCountAsync(key, key1).join().intValue());
 
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            kBatch.getHyperLogLog().pfCountAsync(key, key1);
+        });
+        assertEquals(6, (long) responses.get(0));
+
         CACHE_TEMPLATE.del(key, key1);
     }
 
@@ -4058,6 +4195,8 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.setObject(key1, "Hello");
         CACHE_TEMPLATE.setObject(key2, 1L);
         CACHE_TEMPLATE.setObject(key3, 2.0D);
+        CACHE_TEMPLATE.set(key2, 1L);
+        CACHE_TEMPLATE.set(key3, 2.0D);
         final ArrayList<String> strings = new ArrayList<>();
         strings.add("hello");
         strings.add("world");
@@ -4212,6 +4351,20 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.setEX(key1, "foo bar", Duration.ofSeconds(10));
         assertEquals("foo bar", CACHE_TEMPLATE.get(key1).get());
+        final long ttl = CACHE_TEMPLATE.ttl(key1);
+        assertTrue(ttl > 7 && ttl <= 10);
+
+        CACHE_TEMPLATE.setObjectEx(key1, "foo bar", Duration.ofSeconds(10));
+        assertEquals("foo bar", CACHE_TEMPLATE.get(key1).get());
+        assertTrue(CACHE_TEMPLATE.ttl(key1) > 7 && CACHE_TEMPLATE.ttl(key1) <= 10);
+
+        CACHE_TEMPLATE.setObjectEx(key1, 1L, Duration.ofSeconds(10));
+        assertEquals(1L, CACHE_TEMPLATE.getLong(key1));
+        assertTrue(CACHE_TEMPLATE.ttl(key1) > 7 && CACHE_TEMPLATE.ttl(key1) <= 10);
+
+        CACHE_TEMPLATE.setObjectEx(key1, 8.0D, Duration.ofSeconds(10));
+        assertEquals(8.0D, CACHE_TEMPLATE.getDouble(key1));
+        assertTrue(CACHE_TEMPLATE.ttl(key1) > 7 && CACHE_TEMPLATE.ttl(key1) <= 10);
 
         CACHE_TEMPLATE.del(key1);
     }
@@ -4226,6 +4379,20 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.setEXAsync(key1, "foo bar", Duration.ofSeconds(10)).join();
         assertEquals("foo bar", CACHE_TEMPLATE.get(key1).get());
+        final long ttl = CACHE_TEMPLATE.ttl(key1);
+        assertTrue(ttl > 7 && ttl <= 10);
+
+        CACHE_TEMPLATE.setObjectEXAsync(key1, "foo bar", Duration.ofSeconds(10)).join();
+        assertEquals("foo bar", CACHE_TEMPLATE.get(key1).get());
+        assertTrue(CACHE_TEMPLATE.ttl(key1) > 7 && CACHE_TEMPLATE.ttl(key1) <= 10);
+
+        CACHE_TEMPLATE.setObjectEXAsync(key1, 1L, Duration.ofSeconds(10)).join();
+        assertEquals(1L, CACHE_TEMPLATE.getLong(key1));
+        assertTrue(CACHE_TEMPLATE.ttl(key1) > 7 && CACHE_TEMPLATE.ttl(key1) <= 10);
+
+        CACHE_TEMPLATE.setObjectEXAsync(key1, 8.0D, Duration.ofSeconds(10)).join();
+        assertEquals(8.0D, CACHE_TEMPLATE.getDouble(key1));
+        assertTrue(CACHE_TEMPLATE.ttl(key1) > 7 && CACHE_TEMPLATE.ttl(key1) <= 10);
 
         CACHE_TEMPLATE.del(key1);
     }
@@ -4265,6 +4432,15 @@ public class AppTest extends TestCase {
         assertEquals(0, CACHE_TEMPLATE.strLen("nonexisting"));
         assertEquals(11, CACHE_TEMPLATE.strLenAsync(key).join().intValue());
         assertEquals(0, CACHE_TEMPLATE.strLenAsync("nonexisting").join().intValue());
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(batch -> {
+            final KStringAsync batchString = batch.getString();
+            batchString.strLenAsync(key);
+            batchString.strLenAsync("nonexisting");
+        });
+
+        assertEquals(11, (long) responses.get(0));
+        assertEquals(0, (long) responses.get(1));
 
         CACHE_TEMPLATE.del(key);
     }
@@ -4645,6 +4821,20 @@ public class AppTest extends TestCase {
         assertEquals(0, (long) optional2);
 
         CACHE_TEMPLATE.del(keys.toArray(new String[]{}));
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(kBatch -> {
+            final KScriptAsync script = kBatch.getScript();
+            try {
+                script.executeScriptAsync(saddNxLua, keys, "hello", "world");
+                script.executeScriptAsync(saddNxLua, keys, "hello", "world");
+            } catch (NoSuchAlgorithmException e) {
+                throw new RuntimeException(e);
+            }
+        });
+        assertEquals(2, (long) responses.get(0));
+        assertEquals(0, (long) responses.get(1));
+
+        CACHE_TEMPLATE.del(keys.toArray(new String[]{}));
     }
 
     /**
@@ -4659,6 +4849,15 @@ public class AppTest extends TestCase {
 
         assertEquals(1, CACHE_TEMPLATE.existsAsync(key).join().intValue());
         assertFalse(1 == CACHE_TEMPLATE.existsAsync("noExistKey").join().intValue());
+
+        final List<?> responses = CACHE_TEMPLATE.pipelineWithResponses(batch -> {
+            final KGenericAsync generic = batch.getGeneric();
+            generic.existsAsync(key);
+            generic.existsAsync("noExistKey");
+        });
+
+        assertEquals(1, (long) responses.get(0));
+        assertFalse(1 == (long) responses.get(1));
 
         CACHE_TEMPLATE.del(key);
     }

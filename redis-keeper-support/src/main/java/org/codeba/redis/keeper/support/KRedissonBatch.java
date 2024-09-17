@@ -36,7 +36,7 @@ import java.util.concurrent.CompletableFuture;
 /**
  * The type K redisson batch.
  */
-class KRedissonBatch implements KBatch {
+public class KRedissonBatch implements KBatch {
     /**
      * The R batch.
      */

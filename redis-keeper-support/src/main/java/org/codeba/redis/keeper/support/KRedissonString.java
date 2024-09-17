@@ -138,6 +138,23 @@ class KRedissonString extends KRedissonStringAsync implements KString {
     }
 
     @Override
+    public void setObjectEx(String key, Object value, Duration duration) {
+        if (value instanceof String) {
+            setEX(key, value.toString(), duration);
+        } else if (value instanceof Integer || value instanceof Long) {
+            final RAtomicLong rAtomicLong = getRAtomicLong(key);
+            rAtomicLong.set(Long.parseLong(value.toString()));
+            rAtomicLong.expire(duration.toMillis(), TimeUnit.MILLISECONDS);
+        } else if (value instanceof Float || value instanceof Double) {
+            final RAtomicDouble rAtomicDouble = getRAtomicDouble(key);
+            rAtomicDouble.set(Double.parseDouble(value.toString()));
+            rAtomicDouble.expire(duration.toMillis(), TimeUnit.MILLISECONDS);
+        } else {
+            getRBucket(key).set(value, duration.toMillis(), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @Override
     public CompletableFuture<Map<String, Object>> mGetAsync(String... keys) {
         return getRBuckets(getCodec()).getAsync(keys).toCompletableFuture();
     }

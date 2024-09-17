@@ -2048,9 +2048,21 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public void setObjectEx(String key, Object value, Duration duration) {
+        log("setObjectEx", key, value);
+        kString.setObjectEx(key, value, duration);
+    }
+
+    @Override
     public CompletableFuture<Void> setObjectAsync(String key, Object value) {
         log("setObjectAsync", key, value);
         return kString.setObjectAsync(key, value);
+    }
+
+    @Override
+    public CompletableFuture<Void> setObjectEXAsync(String key, Object value, Duration duration) {
+        log("setObjectAsync", key, value);
+        return kString.setObjectEXAsync(key, value, duration);
     }
 
     @Override

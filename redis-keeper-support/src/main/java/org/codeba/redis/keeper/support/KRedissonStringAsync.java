@@ -138,6 +138,25 @@ class KRedissonStringAsync extends BaseAsync implements KStringAsync {
     }
 
     @Override
+    public CompletableFuture<Void> setObjectEXAsync(String key, Object value, Duration duration) {
+        if (value instanceof String) {
+            return setEXAsync(key, value.toString(), duration);
+        } else if (value instanceof Integer || value instanceof Long) {
+            final RAtomicLongAsync rAtomicLong = getRAtomicLong(key);
+            return rAtomicLong.setAsync(Long.parseLong(value.toString()))
+                    .thenRunAsync(() -> rAtomicLong.expireAsync(duration.toMillis(), TimeUnit.MILLISECONDS))
+                    .toCompletableFuture();
+        } else if (value instanceof Float || value instanceof Double) {
+            final RAtomicDoubleAsync rAtomicDouble = getRAtomicDouble(key);
+            return rAtomicDouble.setAsync(Double.parseDouble(value.toString()))
+                    .thenRunAsync(() -> rAtomicDouble.expireAsync(duration.toMillis(), TimeUnit.MILLISECONDS))
+                    .toCompletableFuture();
+        } else {
+            return getRBucket(key).setAsync(value, duration.toMillis(), TimeUnit.MILLISECONDS).toCompletableFuture();
+        }
+    }
+
+    @Override
     public CompletableFuture<Void> setAsync(String key, String value) {
         return getRBucket(key, getCodec()).setAsync(value).toCompletableFuture();
     }
