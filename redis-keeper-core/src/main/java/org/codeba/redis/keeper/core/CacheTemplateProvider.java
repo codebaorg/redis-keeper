@@ -1,17 +1,17 @@
 /*
  * Copyright (c) 2024-2025, redis-keeper (mimang447@gmail.com)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
  */
 
 package org.codeba.redis.keeper.core;
@@ -34,16 +34,34 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class CacheTemplateProvider<T> implements LoadBalanceProvider<T>, Serializable {
 
+    /**
+     * The Counter.
+     */
     private final AtomicInteger counter = new AtomicInteger(0);
 
+    /**
+     * The Random.
+     */
     private final ThreadLocalRandom random = ThreadLocalRandom.current();
 
+    /**
+     * The Status counter.
+     */
     private final AtomicInteger statusCounter = new AtomicInteger(0);
 
+    /**
+     * The Status random.
+     */
     private final ThreadLocalRandom statusRandom = ThreadLocalRandom.current();
 
+    /**
+     * The Datasource map.
+     */
     private final Map<String, T> datasourceMap;
 
+    /**
+     * The Datasources map.
+     */
     private final Map<String, List<T>> datasourcesMap;
 
     /**
@@ -112,6 +130,13 @@ public class CacheTemplateProvider<T> implements LoadBalanceProvider<T>, Seriali
         return random(list, statusRandom);
     }
 
+    /**
+     * Poll optional.
+     *
+     * @param list    the list
+     * @param counter the counter
+     * @return the optional
+     */
     private Optional<T> poll(List<T> list, AtomicInteger counter) {
         if (null == list || list.isEmpty()) {
             return Optional.empty();
@@ -123,6 +148,13 @@ public class CacheTemplateProvider<T> implements LoadBalanceProvider<T>, Seriali
         return Optional.ofNullable(list.get(index));
     }
 
+    /**
+     * Random optional.
+     *
+     * @param list              the list
+     * @param threadLocalRandom the thread local random
+     * @return the optional
+     */
     private Optional<T> random(List<T> list, ThreadLocalRandom threadLocalRandom) {
         if (null == list || list.isEmpty()) {
             return Optional.empty();

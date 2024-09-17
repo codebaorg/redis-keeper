@@ -69,6 +69,9 @@ import java.util.regex.Pattern;
  */
 public class YAMLSupport {
 
+    /**
+     * The Log.
+     */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**
@@ -126,6 +129,9 @@ public class YAMLSupport {
 
     }
 
+    /**
+     * The Yaml mapper.
+     */
     private ObjectMapper yamlMapper = createMapper(new YAMLFactory(), null);
 
     /**
@@ -213,6 +219,12 @@ public class YAMLSupport {
         return yamlMapper.readValue(content, configType);
     }
 
+    /**
+     * Resolve env params string.
+     *
+     * @param in the in
+     * @return the string
+     */
     private String resolveEnvParams(Readable in) {
         Scanner s = new Scanner(in).useDelimiter("\\A");
         try {
@@ -225,6 +237,12 @@ public class YAMLSupport {
         }
     }
 
+    /**
+     * Resolve env params string.
+     *
+     * @param content the content
+     * @return the string
+     */
     private String resolveEnvParams(String content) {
         Pattern pattern = Pattern.compile("\\$\\{([\\w\\.]+(:-.+?)?)\\}");
         Matcher m = pattern.matcher(content);
@@ -243,6 +261,13 @@ public class YAMLSupport {
         return content;
     }
 
+    /**
+     * Create mapper object mapper.
+     *
+     * @param mapping     the mapping
+     * @param classLoader the class loader
+     * @return the object mapper
+     */
     private ObjectMapper createMapper(JsonFactory mapping, ClassLoader classLoader) {
         ObjectMapper mapper = new ObjectMapper(mapping);
 

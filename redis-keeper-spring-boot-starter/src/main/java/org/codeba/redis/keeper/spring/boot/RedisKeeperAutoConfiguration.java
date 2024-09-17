@@ -1,17 +1,17 @@
 /*
  * Copyright (c) 2024-2025, redis-keeper (mimang447@gmail.com)
  *
- *    Licensed under the Apache License, Version 2.0 (the "License");
- *    you may not use this file except in compliance with the License.
- *    You may obtain a copy of the License at
+ *     Licensed under the Apache License, Version 2.0 (the "License");
+ *     you may not use this file except in compliance with the License.
+ *     You may obtain a copy of the License at
  *
- *        http://www.apache.org/licenses/LICENSE-2.0
+ *         http://www.apache.org/licenses/LICENSE-2.0
  *
- *    Unless required by applicable law or agreed to in writing, software
- *    distributed under the License is distributed on an "AS IS" BASIS,
- *    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- *    See the License for the specific language governing permissions and
- *    limitations under the License.
+ *     Unless required by applicable law or agreed to in writing, software
+ *     distributed under the License is distributed on an "AS IS" BASIS,
+ *     WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ *     See the License for the specific language governing permissions and
+ *     limitations under the License.
  */
 
 package org.codeba.redis.keeper.spring.boot;
@@ -57,6 +57,9 @@ import java.util.stream.Collectors;
 @EnableConfigurationProperties({RedisDatasourceProperties.class, RedissonDatasourceProperties.class})
 public class RedisKeeperAutoConfiguration<T> {
 
+    /**
+     * The Cache datasource.
+     */
     @Autowired(required = false)
     private CacheDatasource<T> cacheDatasource;
 
@@ -78,6 +81,14 @@ public class RedisKeeperAutoConfiguration<T> {
     }
 
 
+    /**
+     * Load map.
+     *
+     * @param redisProperties    the redis properties
+     * @param redissonProperties the redisson properties
+     * @return the map
+     * @throws IOException the io exception
+     */
     private Map<String, T> load(RedisDatasourceProperties redisProperties, RedissonDatasourceProperties redissonProperties) throws IOException {
         if (null == cacheDatasource) {
             cacheDatasource = (CacheDatasource<T>) new DefaultCacheDatasource();
@@ -116,6 +127,13 @@ public class RedisKeeperAutoConfiguration<T> {
         return cacheDatasource.initialize(map);
     }
 
+    /**
+     * Loads map.
+     *
+     * @param redisProperties    the redis properties
+     * @param redissonProperties the redisson properties
+     * @return the map
+     */
     private Map<String, List<T>> loads(RedisDatasourceProperties redisProperties, RedissonDatasourceProperties redissonProperties) {
         if (null == cacheDatasource) {
             cacheDatasource = (CacheDatasource<T>) new DefaultCacheDatasource();
@@ -175,6 +193,13 @@ public class RedisKeeperAutoConfiguration<T> {
         return cacheDatasource.initializeMulti(map);
     }
 
+    /**
+     * Config config.
+     *
+     * @param redissonKeeperProperties the redisson keeper properties
+     * @return the config
+     * @throws IOException the io exception
+     */
     private Config config(RedissonKeeperProperties redissonKeeperProperties) throws IOException {
         Config result = null;
         final String config = redissonKeeperProperties.getConfig();
@@ -187,6 +212,13 @@ public class RedisKeeperAutoConfiguration<T> {
         return result;
     }
 
+    /**
+     * Config config.
+     *
+     * @param redisProperties the redis properties
+     * @return the config
+     * @throws IOException the io exception
+     */
     private Config config(RedisProperties redisProperties) throws IOException {
         Config config;
         Method clusterMethod = ReflectionUtils.findMethod(RedisProperties.class, "getCluster");

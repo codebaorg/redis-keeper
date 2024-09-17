@@ -33,8 +33,17 @@ import java.util.Optional;
  * @author codeba
  */
 public class CacheTemplateProxy implements InvocationHandler {
+    /**
+     * The Datasource.
+     */
     private String datasource;
+    /**
+     * The Status.
+     */
     private CacheDatasourceStatus status;
+    /**
+     * The Template provider.
+     */
     private CacheTemplateProvider<?> templateProvider;
 
     /**
