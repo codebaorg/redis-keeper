@@ -20,6 +20,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K script async.
+ */
 public interface KScriptAsync {
     /**
      * Execute script async completable future.

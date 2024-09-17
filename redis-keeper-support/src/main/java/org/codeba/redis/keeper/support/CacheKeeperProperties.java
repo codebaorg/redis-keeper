@@ -29,6 +29,9 @@ import java.util.Map;
  */
 public class CacheKeeperProperties implements Serializable {
 
+    /**
+     * The Redis keeper.
+     */
     private RedisKeeper redisKeeper;
 
     /**
@@ -77,6 +80,9 @@ public class CacheKeeperProperties implements Serializable {
      * The type Redis keeper.
      */
     public static class RedisKeeper {
+        /**
+         * The Redisson.
+         */
         private Redisson redisson;
 
         /**
@@ -102,7 +108,13 @@ public class CacheKeeperProperties implements Serializable {
      * The type Redisson.
      */
     public static class Redisson {
+        /**
+         * The Datasource.
+         */
         private Map<String, CacheKeeperConfig> datasource;
+        /**
+         * The Datasources.
+         */
         private Map<String, List<CacheKeeperConfig>> datasources;
 
         /**

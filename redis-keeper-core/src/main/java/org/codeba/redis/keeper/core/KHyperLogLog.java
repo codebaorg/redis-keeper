@@ -18,6 +18,9 @@ package org.codeba.redis.keeper.core;
 
 import java.util.Collection;
 
+/**
+ * The interface K hyper log log.
+ */
 public interface KHyperLogLog extends KHyperLogLogAsync {
 
     /**

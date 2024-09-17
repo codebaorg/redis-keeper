@@ -19,6 +19,9 @@ package org.codeba.redis.keeper.core;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K hyper log log async.
+ */
 public interface KHyperLogLogAsync {
     /**
      * Pf add async completable future.

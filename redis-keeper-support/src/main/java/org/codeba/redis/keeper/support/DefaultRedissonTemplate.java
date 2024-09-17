@@ -57,24 +57,75 @@ import java.util.function.Consumer;
  * @author codeba
  */
 public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate {
+    /**
+     * The Log.
+     */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
+    /**
+     * The Connection info.
+     */
     private final String connectionInfo;
+    /**
+     * The Redisson client.
+     */
     private RedissonClient redissonClient;
+    /**
+     * The Invoke params print.
+     */
     private final boolean invokeParamsPrint;
 
+    /**
+     * The K bit set.
+     */
     private final KBitSet kBitSet;
+    /**
+     * The K map.
+     */
     private final KMap kMap;
+    /**
+     * The K hyper log log.
+     */
     private final KHyperLogLog kHyperLogLog;
+    /**
+     * The K list.
+     */
     private final KList kList;
+    /**
+     * The K set.
+     */
     private final KSet kSet;
+    /**
+     * The Kz set.
+     */
     private final KZSet kzSet;
+    /**
+     * The K string.
+     */
     private final KString kString;
+    /**
+     * The K bloom filter.
+     */
     private final KBloomFilter kBloomFilter;
+    /**
+     * The K lock.
+     */
     private final KLock kLock;
+    /**
+     * The K rate limiter.
+     */
     private final KRateLimiter kRateLimiter;
+    /**
+     * The K generic.
+     */
     private final KGeneric kGeneric;
+    /**
+     * The K redisson geo.
+     */
     private final KRedissonGeo kRedissonGeo;
+    /**
+     * The K script.
+     */
     private final KScript kScript;
 
     /**

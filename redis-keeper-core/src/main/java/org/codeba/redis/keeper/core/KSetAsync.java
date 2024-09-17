@@ -20,6 +20,9 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K set async.
+ */
 public interface KSetAsync {
     /**
      * S add async completable future.

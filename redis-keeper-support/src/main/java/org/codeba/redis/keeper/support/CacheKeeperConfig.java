@@ -25,10 +25,19 @@ import org.redisson.config.Config;
  * @author codeba
  */
 public class CacheKeeperConfig {
+    /**
+     * The Status.
+     */
     private String status = CacheDatasourceStatus.RW.name();
 
+    /**
+     * The Invoke params print.
+     */
     private boolean invokeParamsPrint;
 
+    /**
+     * The Config.
+     */
     private Config config;
 
     /**

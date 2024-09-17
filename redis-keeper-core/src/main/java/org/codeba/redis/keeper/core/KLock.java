@@ -19,6 +19,9 @@ package org.codeba.redis.keeper.core;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The interface K lock.
+ */
 public interface KLock {
     /**
      * Try lock boolean.

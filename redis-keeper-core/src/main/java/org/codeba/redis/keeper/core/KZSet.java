@@ -23,6 +23,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The interface Kz set.
+ */
 public interface KZSet extends KZSetAsync {
     /**
      * Bzm pop optional.

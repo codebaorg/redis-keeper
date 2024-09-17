@@ -18,6 +18,9 @@ package org.codeba.redis.keeper.core;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K rate limiter.
+ */
 public interface KRateLimiter {
     /**
      * Try set rate limiter boolean.

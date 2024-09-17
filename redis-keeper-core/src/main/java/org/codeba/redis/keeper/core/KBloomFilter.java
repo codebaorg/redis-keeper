@@ -18,6 +18,9 @@ package org.codeba.redis.keeper.core;
 
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K bloom filter.
+ */
 public interface KBloomFilter {
     /**
      * Bf add boolean.

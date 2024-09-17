@@ -20,6 +20,9 @@ import java.security.NoSuchAlgorithmException;
 import java.util.List;
 import java.util.Optional;
 
+/**
+ * The interface K script.
+ */
 public interface KScript extends KScriptAsync {
     /**
      * Execute script optional.

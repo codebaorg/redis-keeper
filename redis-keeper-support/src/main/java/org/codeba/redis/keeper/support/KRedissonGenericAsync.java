@@ -34,6 +34,9 @@ import java.util.concurrent.TimeUnit;
  * The type K redisson generic async.
  */
 class KRedissonGenericAsync extends BaseAsync implements KGenericAsync {
+    /**
+     * The Log.
+     */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
 
     /**

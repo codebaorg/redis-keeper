@@ -22,6 +22,9 @@ import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The interface Kz set async.
+ */
 public interface KZSetAsync {
     /**
      * Bzm pop async completable future.

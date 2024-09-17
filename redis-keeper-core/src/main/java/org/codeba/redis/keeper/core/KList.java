@@ -21,6 +21,9 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The interface K list.
+ */
 public interface KList extends KListAsync {
     /**
      * Bl move optional.

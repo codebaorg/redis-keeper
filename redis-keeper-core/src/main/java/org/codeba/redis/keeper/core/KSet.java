@@ -21,6 +21,9 @@ import java.util.Iterator;
 import java.util.Optional;
 import java.util.Set;
 
+/**
+ * The interface K set.
+ */
 public interface KSet extends KSetAsync {
     /**
      * S add boolean.

@@ -18,6 +18,9 @@ package org.codeba.redis.keeper.core;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * The interface K generic.
+ */
 public interface KGeneric extends KGenericAsync {
     /**
      * Exists long.
