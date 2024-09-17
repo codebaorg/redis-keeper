@@ -19,6 +19,9 @@ package org.codeba.redis.keeper.core;
 import java.time.Duration;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K string async.
+ */
 public interface KStringAsync {
 
     /**
@@ -112,29 +115,6 @@ public interface KStringAsync {
      */
     CompletableFuture<Double> incrByFloatAsync(String key, double increment);
 
-
-    /**
-     * Compare and set async completable future.
-     *
-     * @param key    the key
-     * @param expect the expect
-     * @param update the update
-     * @return the completable future
-     */
-    CompletableFuture<Boolean> compareAndSetAsync(String key, long expect, long update);
-
-
-    /**
-     * Compare and set async completable future.
-     *
-     * @param key    the key
-     * @param expect the expect
-     * @param update the update
-     * @return the completable future
-     */
-    CompletableFuture<Boolean> compareAndSetAsync(String key, double expect, double update);
-
-
     /**
      * Sets async.
      *
@@ -145,6 +125,16 @@ public interface KStringAsync {
     CompletableFuture<Void> setObjectAsync(String key, Object value);
 
     /**
+     * Sets object async.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     * @return the object async
+     */
+    CompletableFuture<Void> setObjectEXAsync(String key, Object value, Duration duration);
+
+    /**
      * Sets async.
      *
      * @param key   the key
@@ -153,6 +143,15 @@ public interface KStringAsync {
      */
     CompletableFuture<Void> setAsync(String key, String value);
 
+    /**
+     * Sets ex async.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     * @return the ex async
+     */
+    CompletableFuture<Void> setEXAsync(String key, String value, Duration duration);
 
     /**
      * Sets async.
@@ -184,17 +183,26 @@ public interface KStringAsync {
      */
     CompletableFuture<Boolean> compareAndSetAsync(String key, String expect, String update);
 
+    /**
+     * Compare and set async completable future.
+     *
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> compareAndSetAsync(String key, long expect, long update);
+
 
     /**
-     * Sets ex async.
+     * Compare and set async completable future.
      *
-     * @param key      the key
-     * @param value    the value
-     * @param duration the duration
-     * @return the ex async
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the completable future
      */
-    CompletableFuture<Void> setEXAsync(String key, String value, Duration duration);
-
+    CompletableFuture<Boolean> compareAndSetAsync(String key, double expect, double update);
 
     /**
      * Str len async completable future.

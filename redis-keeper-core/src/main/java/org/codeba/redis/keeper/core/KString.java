@@ -21,6 +21,9 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 
+/**
+ * The interface K string.
+ */
 public interface KString extends KStringAsync {
     /**
      * Append.
@@ -114,34 +117,6 @@ public interface KString extends KStringAsync {
     double incrByFloat(String key, double increment);
 
     /**
-     * Compare and set boolean.
-     *
-     * @param key    the key
-     * @param expect the expect
-     * @param update the update
-     * @return the boolean
-     */
-    boolean compareAndSet(String key, long expect, long update);
-
-    /**
-     * Compare and set boolean.
-     *
-     * @param key    the key
-     * @param expect the expect
-     * @param update the update
-     * @return the boolean
-     */
-    boolean compareAndSet(String key, double expect, double update);
-
-    /**
-     * Set.
-     *
-     * @param key   the key
-     * @param value the value
-     */
-    void setObject(String key, Object value);
-
-    /**
      * M get async completable future.
      *
      * @param keys the keys
@@ -199,6 +174,15 @@ public interface KString extends KStringAsync {
     void set(String key, String value);
 
     /**
+     * Sets ex.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     */
+    void setEX(String key, String value, Duration duration);
+
+    /**
      * Set.
      *
      * @param key   the key
@@ -215,6 +199,23 @@ public interface KString extends KStringAsync {
     void set(String key, Double value);
 
     /**
+     * Set.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    void setObject(String key, Object value);
+
+    /**
+     * Sets object ex.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     */
+    void setObjectEx(String key, Object value, Duration duration);
+
+    /**
      * Compare and set boolean.
      *
      * @param key    the key
@@ -225,13 +226,24 @@ public interface KString extends KStringAsync {
     boolean compareAndSet(String key, String expect, String update);
 
     /**
-     * Sets ex.
+     * Compare and set boolean.
      *
-     * @param key      the key
-     * @param value    the value
-     * @param duration the duration
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the boolean
      */
-    void setEX(String key, String value, Duration duration);
+    boolean compareAndSet(String key, long expect, long update);
+
+    /**
+     * Compare and set boolean.
+     *
+     * @param key    the key
+     * @param expect the expect
+     * @param update the update
+     * @return the boolean
+     */
+    boolean compareAndSet(String key, double expect, double update);
 
     /**
      * Str len long.
