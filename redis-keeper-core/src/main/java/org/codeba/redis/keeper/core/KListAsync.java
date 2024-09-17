@@ -60,7 +60,6 @@ public interface KListAsync {
      * @param timeout the timeout
      * @param unit    the unit
      * @return the completable future
-     * @throws InterruptedException the interrupted exception
      */
     CompletableFuture<Object> blPopAsync(String key, long timeout, TimeUnit unit);
 
@@ -99,7 +98,6 @@ public interface KListAsync {
      * @param timeout the timeout
      * @param unit    the unit
      * @return the completable future
-     * @throws InterruptedException the interrupted exception
      */
     CompletableFuture<Object> brPopAsync(String key, long timeout, TimeUnit unit);
 
