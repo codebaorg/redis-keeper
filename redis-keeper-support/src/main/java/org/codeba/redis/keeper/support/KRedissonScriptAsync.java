@@ -59,11 +59,16 @@ class KRedissonScriptAsync extends BaseAsync implements KScriptAsync {
         /* evalSha: 此处必须加上 StringCodec.INSTANCE */
         final RScriptAsync rScript = getRScript();
         String shaDigests = sha1DigestAsHex(script);
-        try {
-            return rScript.evalShaAsync(RScript.Mode.READ_WRITE, shaDigests, RScript.ReturnType.VALUE, keys, values).toCompletableFuture();
-        } catch (RedisException e) {
-            return rScript.evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE, keys, values).toCompletableFuture();
-        }
+        return rScript.evalShaAsync(RScript.Mode.READ_WRITE, shaDigests, RScript.ReturnType.VALUE, keys, values)
+                .handle((result, error) -> {
+                    if (error instanceof RedisException) {
+                        return rScript.evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE, keys, values)
+                                .toCompletableFuture()
+                                .join();
+                    }
+                    return result;
+                })
+                .toCompletableFuture();
     }
 
     /**

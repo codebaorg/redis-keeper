@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.codeba</groupId>
         <artifactId>redis-keeper</artifactId>
-        <version>2024.2.0</version>
+        <version>2024.2.1</version>
     </parent>
 
     <artifactId>redis-keeper-core</artifactId>

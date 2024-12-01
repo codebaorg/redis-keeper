@@ -35,6 +35,7 @@ import org.codeba.redis.keeper.core.KSetAsync;
 import org.codeba.redis.keeper.core.KStringAsync;
 import org.codeba.redis.keeper.core.KZSetAsync;
 import org.codeba.redis.keeper.core.KeyType;
+import org.redisson.api.RedissonClient;
 import org.redisson.codec.JsonJacksonCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -4799,7 +4800,7 @@ public class AppTest extends TestCase {
      * @throws NoSuchAlgorithmException the no such algorithm exception
      */
     public void testExecuteScriptAsync() throws NoSuchAlgorithmException {
-        String saddNxLua = "local added = {};" +
+        String saddNxLua = "local pp = {};local added = {};" +
                 "for i, v in ipairs(ARGV) do" +
                 "    local addResult = redis.call('SADD', KEYS[1], ARGV[i]);" +
                 "    if( addResult < 1 ) then" +
@@ -5088,6 +5089,22 @@ public class AppTest extends TestCase {
         assertFalse(CACHE_TEMPLATE.tryAcquireAsync(key, 3).join());
 
         CACHE_TEMPLATE.del(key, "{" + key + "}:permits", "{" + key + "}:value");
+    }
+
+    public void testDefaultRedissonTemplate() {
+        String key = "my-key-adapter";
+        Object value = KeyType.LIST;
+
+        DefaultRedissonTemplate defaultRedissonTemplate = (DefaultRedissonTemplate) CACHE_TEMPLATE;
+        final RedissonClient redissonClient = defaultRedissonTemplate.getRedissonClient();
+        final boolean add = redissonClient.getScoredSortedSet(key).add(1, value);
+        assertTrue(add);
+
+        final boolean zRem = CACHE_TEMPLATE.zRem(key, Collections.singletonList(value));
+        assertFalse(zRem);
+
+        CACHE_TEMPLATE.del(key);
+
     }
 
 }
