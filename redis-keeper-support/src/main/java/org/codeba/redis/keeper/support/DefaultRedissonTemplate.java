@@ -2118,13 +2118,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
 
     @Override
     public Map<String, Object> mGet(String... keys) {
-        log("mGet", keys);
+        log("mGet", Arrays.toString(keys));
         return kString.mGet(keys);
     }
 
     @Override
     public CompletableFuture<Map<String, Object>> mGetAsync(String... keys) {
-        log("mGetAsync", keys);
+        log("mGetAsync", Arrays.toString(keys));
         return kString.mGetAsync(keys);
     }
 
@@ -2334,13 +2334,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
 
     @Override
     public long exists(String... keys) {
-        log("exists", keys);
+        log("exists", Arrays.toString(keys));
         return kGeneric.exists(keys);
     }
 
     @Override
     public CompletableFuture<Long> existsAsync(String... keys) {
-        log("existsAsync", keys);
+        log("existsAsync", Arrays.toString(keys));
         return kGeneric.existsAsync(keys);
     }
 
@@ -2370,25 +2370,25 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
 
     @Override
     public long del(String... keys) {
-        log("del", keys);
+        log("del", Arrays.toString(keys));
         return kGeneric.del(keys);
     }
 
     @Override
     public CompletableFuture<Long> delAsync(String... keys) {
-        log("delAsync", keys);
+        log("delAsync", Arrays.toString(keys));
         return kGeneric.delAsync(keys);
     }
 
     @Override
     public long unlink(String... keys) {
-        log("unlink", keys);
+        log("unlink", Arrays.toString(keys));
         return kGeneric.unlink(keys);
     }
 
     @Override
     public CompletableFuture<Long> unlinkAsync(String... keys) {
-        log("unlinkAsync", keys);
+        log("unlinkAsync", Arrays.toString(keys));
         return kGeneric.unlinkAsync(keys).toCompletableFuture();
     }
 

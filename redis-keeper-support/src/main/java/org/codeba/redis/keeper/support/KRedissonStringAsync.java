@@ -67,7 +67,7 @@ class KRedissonStringAsync extends BaseAsync implements KStringAsync {
         return getRBucket(key, getCodec()).getAsync()
                 .handle((object, throwable) -> {
                     if (null != throwable) {
-                        return getRBucket(key).getAsync().join();
+                        return getRBucket(key).getAsync().toCompletableFuture().join();
                     }
                     return object;
                 }).toCompletableFuture();
@@ -78,7 +78,7 @@ class KRedissonStringAsync extends BaseAsync implements KStringAsync {
         return getRBucket(key).getAsync()
                 .handle((object, throwable) -> {
                     if (null != throwable) {
-                        return getRBucket(key, getCodec()).getAsync().join();
+                        return getRBucket(key, getCodec()).getAsync().toCompletableFuture().join();
                     }
                     return object;
                 }).toCompletableFuture();
