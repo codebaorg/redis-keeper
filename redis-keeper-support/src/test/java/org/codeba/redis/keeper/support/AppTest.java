@@ -4623,7 +4623,7 @@ public class AppTest extends TestCase {
      * @throws NoSuchAlgorithmException the no such algorithm exception
      */
     public void testExecuteScriptAsync() throws NoSuchAlgorithmException {
-        String saddNxLua = "local added = {};" +
+        String saddNxLua = "local async = {};local added = {};" +
                 "for i, v in ipairs(ARGV) do" +
                 "    local addResult = redis.call('SADD', KEYS[1], ARGV[i]);" +
                 "    if( addResult < 1 ) then" +

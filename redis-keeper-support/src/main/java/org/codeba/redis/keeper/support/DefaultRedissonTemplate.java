@@ -19,7 +19,6 @@ package org.codeba.redis.keeper.support;
 import org.codeba.redis.keeper.core.CacheTemplate;
 import org.codeba.redis.keeper.core.KeyType;
 import org.redisson.Redisson;
-import org.redisson.api.RFuture;
 import org.redisson.api.RScript;
 import org.redisson.api.RedissonClient;
 import org.redisson.client.RedisException;
@@ -2018,13 +2017,13 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
 
     @Override
     public Map<String, Object> mGet(String... keys) {
-        log("mGet", keys);
+        log("mGet", Arrays.toString(keys));
         return rString.mGet(keys);
     }
 
     @Override
     public CompletableFuture<Map<String, Object>> mGetAsync(String... keys) {
-        log("mGetAsync", keys);
+        log("mGetAsync", Arrays.toString(keys));
         return rString.mGetAsync(keys);
     }
 
@@ -2223,44 +2222,40 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     @Override
     public Optional<Object> executeScript(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
         log("executeScript", script, keys, values);
-        return Optional.ofNullable(executeScriptRFuture(script, keys, values).toCompletableFuture().join());
+        return Optional.ofNullable(executeScriptRFuture(script, keys, values).join());
     }
 
     @Override
     public CompletableFuture<Object> executeScriptAsync(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
         log("executeScriptAsync", script, keys, values);
-        return executeScriptRFuture(script, keys, values).toCompletableFuture();
+        return executeScriptRFuture(script, keys, values);
     }
 
-    private RFuture<Object> executeScriptRFuture(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
+    private CompletableFuture<Object> executeScriptRFuture(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
         /* evalSha: 此处必须加上 StringCodec.INSTANCE */
         final RScript rScript = getDataSource().getScript(StringCodec.INSTANCE);
         String shaDigests = sha1DigestAsHex(script);
-        final List<Boolean> scriptExists = rScript.scriptExists(shaDigests);
-        if (null != scriptExists && !scriptExists.isEmpty()) {
-            final Boolean exists = scriptExists.get(0);
-            if (exists) {
-                try {
-                    return rScript.evalShaAsync(RScript.Mode.READ_WRITE, shaDigests, RScript.ReturnType.VALUE, keys, values);
-                } catch (RedisException e) {
-                    return rScript.evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE, keys, values);
-                }
-            }
-        }
-
-        /* eval script */
-        return rScript.evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE, keys, values);
+        return rScript.evalShaAsync(RScript.Mode.READ_WRITE, shaDigests, RScript.ReturnType.VALUE, keys, values)
+                .handle((result, error) -> {
+                    if (error instanceof RedisException) {
+                        return rScript.evalAsync(RScript.Mode.READ_WRITE, script, RScript.ReturnType.VALUE, keys, values)
+                                .toCompletableFuture()
+                                .join();
+                    }
+                    return result;
+                })
+                .toCompletableFuture();
     }
 
     @Override
     public long exists(String... keys) {
-        log("exists", keys);
+        log("exists", Arrays.toString(keys));
         return rGeneric.exists(keys);
     }
 
     @Override
     public CompletableFuture<Long> existsAsync(String... keys) {
-        log("existsAsync", keys);
+        log("existsAsync", Arrays.toString(keys));
         return rGeneric.existsAsync(keys);
     }
 
@@ -2290,25 +2285,25 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
 
     @Override
     public long del(String... keys) {
-        log("del", keys);
+        log("del", Arrays.toString(keys));
         return rGeneric.del(keys);
     }
 
     @Override
     public CompletableFuture<Long> delAsync(String... keys) {
-        log("delAsync", keys);
+        log("delAsync", Arrays.toString(keys));
         return rGeneric.delAsync(keys);
     }
 
     @Override
     public long unlink(String... keys) {
-        log("unlink", keys);
+        log("unlink", Arrays.toString(keys));
         return rGeneric.unlink(keys);
     }
 
     @Override
     public CompletableFuture<Long> unlinkAsync(String... keys) {
-        log("unlinkAsync", keys);
+        log("unlinkAsync", Arrays.toString(keys));
         return rGeneric.unlinkAsync(keys).toCompletableFuture();
     }
 
