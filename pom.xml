@@ -22,7 +22,7 @@
 
     <groupId>org.codeba</groupId>
     <artifactId>redis-keeper</artifactId>
-    <version>2024.2.0</version>
+    <version>2024.2.1</version>
 
     <name>redis-keeper</name>
     <description>Redis-keeper is a lightweight multi-data source management tool for redis.</description>
@@ -43,7 +43,7 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 
-        <redis-keeper.version>2024.2.0</redis-keeper.version>
+        <redis-keeper.version>2024.2.1</redis-keeper.version>
         <redisson.version>3.35.0</redisson.version>
 
         <spring.version>5.3.27</spring.version>

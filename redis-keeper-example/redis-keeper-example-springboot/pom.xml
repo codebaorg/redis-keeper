@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.codeba</groupId>
         <artifactId>redis-keeper-example</artifactId>
-        <version>2024.2.0</version>
+        <version>2024.2.1</version>
     </parent>
 
     <artifactId>redis-keeper-example-springboot</artifactId>
@@ -48,7 +48,7 @@
         <dependency>
             <groupId>org.codeba</groupId>
             <artifactId>redis-keeper-spring-boot-starter</artifactId>
-            <version>2024.2.0</version>
+            <version>2024.2.1</version>
         </dependency>
 
         <dependency>
