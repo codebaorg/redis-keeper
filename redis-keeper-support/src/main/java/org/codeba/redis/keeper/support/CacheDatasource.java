@@ -76,7 +76,6 @@ public interface CacheDatasource<T> {
      * @return the map
      */
     default Map<String, T> initialize(Map<String, CacheKeeperConfig> datasourceMap) {
-        TEMPLATE_CONFIG_CACHE_SET.clear();
         final Map<String, T> map = new HashMap<>();
 
         if (null == datasourceMap || datasourceMap.isEmpty()) {
@@ -118,7 +117,6 @@ public interface CacheDatasource<T> {
      * @return the map
      */
     default Map<String, List<T>> initializeMulti(Map<String, List<CacheKeeperConfig>> datasourceMap) {
-        TEMPLATE_CONFIG_CACHE_SET.clear();
         final Map<String, List<T>> map = new HashMap<>();
 
         if (null == datasourceMap || datasourceMap.isEmpty()) {
@@ -221,6 +219,8 @@ public interface CacheDatasource<T> {
                 it.remove();
             }
         }
+
+        TEMPLATE_CONFIG_CACHE_SET.clear();
     }
 
 }
