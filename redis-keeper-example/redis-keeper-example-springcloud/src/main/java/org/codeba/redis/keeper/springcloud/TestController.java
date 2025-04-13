@@ -17,18 +17,21 @@
 package org.codeba.redis.keeper.springcloud;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.codeba.redis.keeper.core.CacheTemplate;
 import org.codeba.redis.keeper.core.CacheTemplateProvider;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
 
 /**
  * The type Test controller.
  *
  * @author codeba
  */
+@Slf4j
 @RestController
 @RequiredArgsConstructor
 public class TestController {
@@ -42,12 +45,38 @@ public class TestController {
      * Test refresh.
      */
     @RequestMapping("/refresh")
-    public void testRefresh() {
-        final Optional<CacheTemplate> templateOptional = provider.getTemplate("ds1");
-        templateOptional.ifPresent(cacheTemplate -> {
-            cacheTemplate.set("foo", "bar");
-            cacheTemplate.del("foo");
+    public boolean testRefresh() {
+        final long start = System.currentTimeMillis();
+
+        final CompletableFuture<Void> f1 = CompletableFuture.runAsync(() -> {
+            for (int i = 0; i < 100000; i++) {
+                final Optional<CacheTemplate> templateOptional = provider.getTemplate("ds4");
+                templateOptional.ifPresent(cacheTemplate -> {
+                    cacheTemplate.incr("testRefresh");
+                });
+            }
         });
+        final CompletableFuture<Void> f2 = CompletableFuture.runAsync(() -> {
+            for (int i = 0; i < 100000; i++) {
+                final Optional<CacheTemplate> templateOptional = provider.getTemplate("ds4");
+                templateOptional.ifPresent(cacheTemplate -> {
+                    cacheTemplate.incr("testRefresh");
+                });
+            }
+        });
+        final CompletableFuture<Void> f3 = CompletableFuture.runAsync(() -> {
+            for (int i = 0; i < 100000; i++) {
+                final Optional<CacheTemplate> templateOptional = provider.getTemplate("ds4");
+                templateOptional.ifPresent(cacheTemplate -> {
+                    cacheTemplate.incr("testRefresh");
+                });
+            }
+        });
+
+        CompletableFuture.allOf(f1, f2, f3).join();
+        log.info("cost time: {}", (System.currentTimeMillis() - start));
+
+        return true;
     }
 
 

@@ -65,4 +65,9 @@ public interface CacheTemplate extends KBitSet, KGeneric, KGeo, KMap, KHyperLogL
      */
     CompletableFuture<List<?>> pipelineWithResponsesAsync(Consumer<KBatch> batchConsumer);
 
+    /**
+     * Destroy.
+     */
+    void destroy();
+
 }
