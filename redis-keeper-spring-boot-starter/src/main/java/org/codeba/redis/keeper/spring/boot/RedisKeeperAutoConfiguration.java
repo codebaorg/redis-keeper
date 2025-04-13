@@ -26,12 +26,16 @@ import org.redisson.config.ClusterServersConfig;
 import org.redisson.config.Config;
 import org.redisson.config.SentinelServersConfig;
 import org.redisson.config.SingleServerConfig;
+import org.springframework.aop.scope.ScopedProxyUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.data.redis.RedisProperties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.cloud.context.scope.refresh.RefreshScopeRefreshedEvent;
+import org.springframework.context.ApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.event.EventListener;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;
 
@@ -56,6 +60,16 @@ import java.util.stream.Collectors;
 @SuppressWarnings({"unchecked"})
 @EnableConfigurationProperties({RedisDatasourceProperties.class, RedissonDatasourceProperties.class})
 public class RedisKeeperAutoConfiguration<T> {
+    /**
+     * The constant PROVIDER_BEAN_NAME.
+     */
+    private static final String PROVIDER_BEAN_NAME = "cacheTemplateProvider";
+
+    /**
+     * The Context.
+     */
+    @Autowired
+    private ApplicationContext context;
 
     /**
      * The Cache datasource.
@@ -64,22 +78,43 @@ public class RedisKeeperAutoConfiguration<T> {
     private CacheDatasource<T> cacheDatasource;
 
     /**
+     * The Redis properties.
+     */
+    @Autowired
+    private RedisDatasourceProperties redisProperties;
+
+    /**
+     * The Redisson properties.
+     */
+    @Autowired
+    private RedissonDatasourceProperties redissonProperties;
+
+    /**
      * Cache template provider cache template provider.
+     * <p>
      *
-     * @param redisProperties    the redis properties
-     * @param redissonProperties the redisson properties
      * @return the cache template provider
      * @throws IOException the io exception
      */
-    @Bean
+    @Bean(name = RedisKeeperAutoConfiguration.PROVIDER_BEAN_NAME)
     @RefreshScope
-    public CacheTemplateProvider<T> cacheTemplateProvider(RedisDatasourceProperties redisProperties, RedissonDatasourceProperties redissonProperties) throws IOException {
+    public CacheTemplateProvider<T> cacheTemplateProvider() throws IOException {
         final Map<String, T> loadMap = load(redisProperties, redissonProperties);
-        final Map<String, List<T>> loadsMap = loads(redisProperties, redissonProperties);
-
-        return new CacheTemplateProvider<>(loadMap, loadsMap);
+        final Map<String, List<T>> loadListMap = loads(redisProperties, redissonProperties);
+        // clean
+        cacheDatasource.clean();
+        return new CacheTemplateProvider<>(loadMap, loadListMap);
     }
 
+    /**
+     * On refresh.
+     */
+    @EventListener(RefreshScopeRefreshedEvent.class)
+    public void onRefresh() {
+        if (!redisProperties.isLazyRefresh() || !redissonProperties.isLazyRefresh()) {
+            this.context.getBean(ScopedProxyUtils.getTargetBeanName(PROVIDER_BEAN_NAME));
+        }
+    }
 
     /**
      * Load map.

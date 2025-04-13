@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.codeba</groupId>
         <artifactId>redis-keeper</artifactId>
-        <version>2024.2.1</version>
+        <version>2024.2.2</version>
     </parent>
 
     <artifactId>redis-keeper-core</artifactId>
@@ -33,5 +33,24 @@
         <maven.compiler.target>8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
+
+    <build>
+        <plugins>
+            <!-- Javadoc -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-javadoc-plugin</artifactId>
+                <version>2.9.1</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>jar</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>

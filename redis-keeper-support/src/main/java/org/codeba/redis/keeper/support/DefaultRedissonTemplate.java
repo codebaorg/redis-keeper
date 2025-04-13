@@ -67,6 +67,10 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
      */
     private final String connectionInfo;
     /**
+     * The Status.
+     */
+    private final String status;
+    /**
      * The Redisson client.
      */
     private RedissonClient redissonClient;
@@ -78,55 +82,55 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     /**
      * The K bit set.
      */
-    private final KBitSet kBitSet;
+    private KBitSet kBitSet;
     /**
      * The K map.
      */
-    private final KMap kMap;
+    private KMap kMap;
     /**
      * The K hyper log log.
      */
-    private final KHyperLogLog kHyperLogLog;
+    private KHyperLogLog kHyperLogLog;
     /**
      * The K list.
      */
-    private final KList kList;
+    private KList kList;
     /**
      * The K set.
      */
-    private final KSet kSet;
+    private KSet kSet;
     /**
      * The Kz set.
      */
-    private final KZSet kzSet;
+    private KZSet kzSet;
     /**
      * The K string.
      */
-    private final KString kString;
+    private KString kString;
     /**
      * The K bloom filter.
      */
-    private final KBloomFilter kBloomFilter;
+    private KBloomFilter kBloomFilter;
     /**
      * The K lock.
      */
-    private final KLock kLock;
+    private KLock kLock;
     /**
      * The K rate limiter.
      */
-    private final KRateLimiter kRateLimiter;
+    private KRateLimiter kRateLimiter;
     /**
      * The K generic.
      */
-    private final KGeneric kGeneric;
+    private KGeneric kGeneric;
     /**
      * The K redisson geo.
      */
-    private final KRedissonGeo kRedissonGeo;
+    private KRedissonGeo kRedissonGeo;
     /**
      * The K script.
      */
-    private final KScript kScript;
+    private KScript kScript;
 
     /**
      * Instantiates a new Default redisson template.
@@ -135,6 +139,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
      */
     public DefaultRedissonTemplate(CacheKeeperConfig cacheKeeperConfig) {
         this.invokeParamsPrint = cacheKeeperConfig.isInvokeParamsPrint();
+        this.status = cacheKeeperConfig.getStatus();
         this.connectionInfo = Utils.getConnectionInfo(cacheKeeperConfig.getConfig());
 
         try {
@@ -2474,6 +2479,32 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public CompletableFuture<Boolean> tryAcquireAsync(String key, long permits) {
         log("tryAcquireAsync", key, permits);
         return kRateLimiter.tryAcquireAsync(key, permits);
+    }
+
+    @Override
+    public void destroy() {
+        try {
+            if (null != this.redissonClient) {
+                this.redissonClient.shutdown();
+            }
+        } catch (Exception e) {
+            log.error("org.codeba.redis.keeper.support.DefaultCacheDatasource.destroy()--", e);
+        } finally {
+            this.kBitSet = null;
+            this.kMap = null;
+            this.kHyperLogLog = null;
+            this.kList = null;
+            this.kSet = null;
+            this.kzSet = null;
+            this.kString = null;
+            this.kBloomFilter = null;
+            this.kLock = null;
+            this.kRateLimiter = null;
+            this.kGeneric = null;
+            this.kRedissonGeo = null;
+            this.kScript = null;
+        }
+
     }
 
     /**

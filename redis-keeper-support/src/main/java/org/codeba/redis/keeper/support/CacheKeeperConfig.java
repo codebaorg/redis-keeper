@@ -19,6 +19,8 @@ package org.codeba.redis.keeper.support;
 import org.codeba.redis.keeper.core.CacheDatasourceStatus;
 import org.redisson.config.Config;
 
+import java.io.IOException;
+
 /**
  * The type Cache keeper config.
  *
@@ -77,6 +79,17 @@ public class CacheKeeperConfig {
         this.status = status;
         this.invokeParamsPrint = invokeParamsPrint;
         this.config = config;
+    }
+
+    @Override
+    public String toString() {
+        final String configYAML;
+        try {
+            configYAML = config.toYAML();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return Utils.getMD5(status + invokeParamsPrint + configYAML);
     }
 
     /**

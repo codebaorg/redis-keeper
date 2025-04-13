@@ -17,6 +17,7 @@
 package org.codeba.redis.keeper.spring.boot;
 
 import lombok.Data;
+import org.springframework.beans.factory.DisposableBean;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.List;
@@ -29,16 +30,32 @@ import java.util.Map;
  */
 @Data
 @ConfigurationProperties(prefix = "redis-keeper.redisson")
-public class RedissonDatasourceProperties {
-
+public class RedissonDatasourceProperties implements DisposableBean {
     /**
-     * The Datasource.
+     * The Lazy refresh, when a configuration change occurs, the bean initialized immediately or when the bean is first invoked
+     * <p>
+     * true: the bean initialized when the bean is first invoked
+     * false: the bean initialized immediately
+     */
+    private boolean lazyRefresh = true;
+    /**
+     * The Datasource. One-to-one redis data source
      */
     private Map<String, RedissonKeeperProperties> datasource;
 
     /**
-     * The Datasources.
+     * The Datasources. One-to-many redis data sources
      */
     private Map<String, List<RedissonKeeperProperties>> datasources;
+
+    /**
+     * Destroy.
+     */
+    @Override
+    public void destroy() {
+        lazyRefresh = true;
+        datasource = null;
+        datasources = null;
+    }
 
 }
