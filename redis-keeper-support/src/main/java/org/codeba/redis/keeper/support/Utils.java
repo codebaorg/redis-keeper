@@ -22,6 +22,9 @@ import org.redisson.config.SentinelServersConfig;
 import org.redisson.config.SingleServerConfig;
 
 import java.lang.annotation.Annotation;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -134,6 +137,40 @@ public class Utils {
      */
     public static boolean isAnnotationPresent(final Class<? extends Annotation> targetAnnotation, final Class<?> annotatedType) {
         return findAnnotation(targetAnnotation, annotatedType) != null;
+    }
+
+    /**
+     * Gets md 5.
+     *
+     * @param input the input
+     * @return the md 5
+     */
+    public static String getMD5(String input) {
+        try {
+            MessageDigest md = MessageDigest.getInstance("MD5");
+            byte[] digest = md.digest(input.getBytes(StandardCharsets.UTF_8));
+            return bytesToHex(digest);
+        } catch (NoSuchAlgorithmException e) {
+            throw new IllegalArgumentException(e);
+        }
+    }
+
+    /**
+     * Bytes to hex string.
+     *
+     * @param bytes the bytes
+     * @return the string
+     */
+    private static String bytesToHex(byte[] bytes) {
+        StringBuilder hexString = new StringBuilder();
+        for (byte b : bytes) {
+            String hex = Integer.toHexString(0xff & b);
+            if (hex.length() == 1) {
+                hexString.append('0');
+            }
+            hexString.append(hex);
+        }
+        return hexString.toString();
     }
 
 }

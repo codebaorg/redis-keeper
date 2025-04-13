@@ -3655,4 +3655,9 @@ public interface CacheTemplate {
      */
     CompletableFuture<Boolean> tryAcquireAsync(String key, long permits);
 
+    /**
+     * Destroy.
+     */
+    void destroy();
+
 }

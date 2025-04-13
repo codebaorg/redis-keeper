@@ -17,14 +17,24 @@
 package org.codeba.redis.keeper.support;
 
 import org.codeba.redis.keeper.core.CacheDatasourceStatus;
+import org.codeba.redis.keeper.core.CacheTemplate;
 import org.codeba.redis.keeper.core.Provider;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -35,6 +45,21 @@ import java.util.stream.Collectors;
  * @author codeba
  */
 public interface CacheDatasource<T> {
+
+    /**
+     * The constant TEMPLATE_CACHE_MAP.
+     */
+    ConcurrentHashMap<String, Object> TEMPLATE_CACHE_MAP = new ConcurrentHashMap<>();
+
+    /**
+     * The constant TEMPLATE_CONFIG_CACHE_SET.
+     */
+    Set<String> TEMPLATE_CONFIG_CACHE_SET = Collections.synchronizedSet(new HashSet<>());
+
+    /**
+     * The constant THREAD_POOL_EXECUTOR.
+     */
+    ExecutorService THREAD_POOL_EXECUTOR = new ThreadPoolExecutor(5, 10, 2, TimeUnit.MINUTES, new LinkedBlockingQueue<>(100));
 
     /**
      * Instant template t.
@@ -66,7 +91,13 @@ public interface CacheDatasource<T> {
             }).accept(config);
 
             // cacheTemplate Instantiation
-            final T template = instantTemplate(config);
+            final String configString = config.toString();
+            TEMPLATE_CONFIG_CACHE_SET.add(configString);
+            T template = getTemplate(configString);
+            if (null == template) {
+                template = instantTemplate(config);
+                TEMPLATE_CACHE_MAP.put(configString, template);
+            }
 
             // <name, template>
             map.put(key.trim(), template);
@@ -103,7 +134,13 @@ public interface CacheDatasource<T> {
                         }).accept(config);
 
                         // cacheTemplate Instantiation
-                        final T template = instantTemplate(config);
+                        final String configString = config.toString();
+                        TEMPLATE_CONFIG_CACHE_SET.add(configString);
+                        T template = getTemplate(configString);
+                        if (null == template) {
+                            template = instantTemplate(config);
+                            TEMPLATE_CACHE_MAP.put(configString, template);
+                        }
 
                         // <name-datasourceStatus, List<template>>
                         final CacheDatasourceStatus datasourceStatus = checkDatasourceStatus(config.getStatus());
@@ -149,6 +186,41 @@ public interface CacheDatasource<T> {
                     + Arrays.toString(CacheDatasourceStatus.values()));
         }
 
+    }
+
+    /**
+     * Gets template.
+     *
+     * @param config the config
+     * @return the template
+     */
+    default T getTemplate(String config) {
+        final Object object = TEMPLATE_CACHE_MAP.get(config);
+        return null == object ? null : (T) object;
+    }
+
+    /**
+     * Clean.
+     */
+    default void clean() {
+        for (Iterator<Map.Entry<String, Object>> it = TEMPLATE_CACHE_MAP.entrySet().iterator(); it.hasNext(); ) {
+            final Map.Entry<String, Object> entry = it.next();
+            final String key = entry.getKey();
+            if (!TEMPLATE_CONFIG_CACHE_SET.contains(key)) {
+                final Object value = entry.getValue();
+                if (null != value) {
+                    // clean async
+                    CompletableFuture.runAsync(() -> {
+                        CacheTemplate template = (CacheTemplate) value;
+                        template.destroy();
+                        template = null;
+                    }, THREAD_POOL_EXECUTOR);
+                }
+                it.remove();
+            }
+        }
+
+        TEMPLATE_CONFIG_CACHE_SET.clear();
     }
 
 }

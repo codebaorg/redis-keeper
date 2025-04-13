@@ -47,22 +47,39 @@ import java.util.concurrent.TimeUnit;
  * @author codeba
  */
 public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate {
+    /**
+     * The Log.
+     */
     private final Logger log = LoggerFactory.getLogger(this.getClass());
+
+    /**
+     * The Connection info.
+     */
     private final String connectionInfo;
+    /**
+     * The Status.
+     */
+    private final String status;
+    /**
+     * The Redisson client.
+     */
     private RedissonClient redissonClient;
+    /**
+     * The Invoke params print.
+     */
     private final boolean invokeParamsPrint;
-    private final RBitMap rBitMap;
-    private final RHash rHash;
-    private final RHyperLogLog rHyperLogLog;
-    private final RLists rLists;
-    private final RSets rSets;
-    private final RZSet rzSet;
-    private final RString rString;
-    private final RBloomFilters rBloomFilters;
-    private final RLocks rLocks;
-    private final RRateLimiters rRateLimiters;
-    private final RGeneric rGeneric;
-    private final RGeos rGeos;
+    private RBitMap rBitMap;
+    private RHash rHash;
+    private RHyperLogLog rHyperLogLog;
+    private RLists rLists;
+    private RSets rSets;
+    private RZSet rzSet;
+    private RString rString;
+    private RBloomFilters rBloomFilters;
+    private RLocks rLocks;
+    private RRateLimiters rRateLimiters;
+    private RGeneric rGeneric;
+    private RGeos rGeos;
 
     /**
      * Instantiates a new Default redisson template.
@@ -71,6 +88,7 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
      */
     public DefaultRedissonTemplate(CacheKeeperConfig cacheKeeperConfig) {
         this.invokeParamsPrint = cacheKeeperConfig.isInvokeParamsPrint();
+        this.status = cacheKeeperConfig.getStatus();
         this.connectionInfo = Utils.getConnectionInfo(cacheKeeperConfig.getConfig());
 
         try {
@@ -2389,6 +2407,31 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public CompletableFuture<Boolean> tryAcquireAsync(String key, long permits) {
         log("tryAcquireAsync", key, permits);
         return rRateLimiters.tryAcquireAsync(key, permits);
+    }
+
+    @Override
+    public void destroy() {
+        try {
+            if (null != this.redissonClient) {
+                this.redissonClient.shutdown();
+            }
+        } catch (Exception e) {
+            log.error("org.codeba.redis.keeper.support.DefaultCacheDatasource.destroy()--", e);
+        } finally {
+            this.rBitMap = null;
+            this.rHash = null;
+            this.rHyperLogLog = null;
+            this.rLists = null;
+            this.rSets = null;
+            this.rzSet = null;
+            this.rString = null;
+            this.rBloomFilters = null;
+            this.rLocks = null;
+            this.rRateLimiters = null;
+            this.rGeneric = null;
+            this.rGeos = null;
+        }
+
     }
 
     /**
