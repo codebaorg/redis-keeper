@@ -27,7 +27,7 @@
 
     <groupId>org.codeba</groupId>
     <artifactId>redis-keeper-example</artifactId>
-    <version>2024.2.0</version>
+    <version>2024.2.2</version>
 
     <packaging>pom</packaging>
 

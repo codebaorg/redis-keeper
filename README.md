@@ -25,26 +25,26 @@
     <dependency>
        <groupId>org.codeba</groupId>
        <artifactId>redis-keeper-core</artifactId>
-       <version>2024.2.0</version>
+       <version>2024.2.2</version>
     </dependency> 
 
     <dependency>
        <groupId>org.codeba</groupId>
        <artifactId>redis-keeper-support</artifactId>
-       <version>2024.2.0</version>
+       <version>2024.2.2</version>
     </dependency> 
 
 #### Gradle
 
-    implementation group: 'org.codeba', name: 'redis-keeper-core', version: '2024.2.0'
+    implementation group: 'org.codeba', name: 'redis-keeper-core', version: '2024.2.2'
 
-    implementation group: 'org.codeba', name: 'redis-keeper-support', version: '2024.2.0'
+    implementation group: 'org.codeba', name: 'redis-keeper-support', version: '2024.2.2'
 
 #### Sbt
 
-    libraryDependencies += "org.codeba" % "redis-keeper-core" % "2024.2.0"
+    libraryDependencies += "org.codeba" % "redis-keeper-core" % "2024.2.2"
     
-    libraryDependencies += "org.codeba" % "redis-keeper-support" % "2024.2.0"
+    libraryDependencies += "org.codeba" % "redis-keeper-support" % "2024.2.2"
 
 
 #### Java
@@ -100,7 +100,7 @@ Optional<CacheTemplate> randomedTemplate = provider.randomTemplate("ds2");
 <dependency>
 	<groupId>org.codeba</groupId>
 	<artifactId>redis-keeper-spring-boot-starter</artifactId>
-	<version>2024.2.0</version>
+	<version>2024.2.2</version>
 </dependency>
 ```
 
@@ -243,7 +243,7 @@ public class AppTest {
 <dependency>
 	<groupId>org.codeba</groupId>
 	<artifactId>redis-keeper-spring-boot-starter</artifactId>
-	<version>2024.2.0</version>
+	<version>2024.2.2</version>
 </dependency>
 ```
 
@@ -337,7 +337,7 @@ public class AppTest {
 <dependency>
 	<groupId>org.codeba</groupId>
 	<artifactId>redis-keeper-spring-boot-starter</artifactId>
-	<version>2024.2.0</version>
+	<version>2024.2.2</version>
 </dependency>
 ```
 
