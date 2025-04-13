@@ -28,19 +28,28 @@ import org.codeba.redis.keeper.core.CacheDatasourceStatus;
 @Data
 public class RedissonKeeperProperties {
     /**
-     * The Status.
+     * The Status is the identity of the data source, you can specify the identity through the cacheProvider class to get the corresponding data source
+     * <p>
+     * Value range: RO, WO, RW, SKIP
+     * RO: Read-only cache datasource status
+     * WO: Write-only cache datasource status.
+     * RW: Read-write cache datasource status.
+     * SKIP: Skip cache datasource status.
      */
     private String status = CacheDatasourceStatus.RW.name();
     /**
-     * The Invoke params print.
+     * The Invoke params print, means whether to print an entry log when executing the methods of the cacheTemplate class.
+     * <p>
+     * true : print entry log
+     * false: not print entry log
      */
     private boolean invokeParamsPrint;
     /**
-     * The Config.
+     * The Config, the same as redisson properties.
      */
     private String config;
     /**
-     * The File.
+     * The File, the same as redisson properties.
      */
     private String file;
 }
