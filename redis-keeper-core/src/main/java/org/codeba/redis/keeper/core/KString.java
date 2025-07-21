@@ -75,6 +75,50 @@ public interface KString extends KStringAsync {
     Optional<Object> getDel(String key);
 
     /**
+     * Gets ex.
+     *
+     * @param key     the key
+     * @param seconds the seconds
+     * @return the ex
+     */
+    Optional<Object> getEX(String key, long seconds);
+
+    /**
+     * Gets px.
+     *
+     * @param key          the key
+     * @param milliseconds the milliseconds
+     * @return the px
+     */
+    Optional<Object> getPX(String key, long milliseconds);
+
+    /**
+     * Gets ex at.
+     *
+     * @param key             the key
+     * @param unixTimeSeconds the unix time seconds
+     * @return the ex at
+     */
+    Optional<Object> getEXAt(String key, long unixTimeSeconds);
+
+    /**
+     * Gets px at.
+     *
+     * @param key                  the key
+     * @param unixTimeMilliseconds the unix time milliseconds
+     * @return the px at
+     */
+    Optional<Object> getPXAt(String key, long unixTimeMilliseconds);
+
+    /**
+     * Gets ex persist.
+     *
+     * @param key the key
+     * @return the ex persist
+     */
+    Optional<Object> getEXPersist(String key);
+
+    /**
      * Gets long.
      *
      * @param key the key

@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.time.Instant;
 import java.util.Collections;
 import java.util.Map;
 import java.util.Optional;
@@ -87,6 +88,49 @@ class KRedissonString extends KRedissonStringAsync implements KString {
     @Override
     public Optional<Object> getDel(String key) {
         return Optional.ofNullable(getRBucket(key, getCodec()).getAndDelete());
+    }
+
+    @Override
+    public Optional<Object> getEX(String key, long seconds) {
+        return getPX(key, seconds * 1000);
+    }
+
+    @Override
+    public Optional<Object> getPX(String key, long milliseconds) {
+        Object object;
+        try {
+            object = getRBucket(key).getAndExpire(Duration.ofMillis(milliseconds));
+        } catch (Exception e) {
+            object = getRBucket(key, getCodec()).getAndExpire(Duration.ofMillis(milliseconds));
+        }
+        return Optional.ofNullable(object);
+    }
+
+    @Override
+    public Optional<Object> getEXAt(String key, long unixTimeSeconds) {
+        return getPXAt(key, unixTimeSeconds * 1000);
+    }
+
+    @Override
+    public Optional<Object> getPXAt(String key, long unixTimeMilliseconds) {
+        Object object;
+        try {
+            object = getRBucket(key).getAndExpire(Instant.ofEpochMilli(unixTimeMilliseconds));
+        } catch (Exception e) {
+            object = getRBucket(key, getCodec()).getAndExpire(Instant.ofEpochMilli(unixTimeMilliseconds));
+        }
+        return Optional.ofNullable(object);
+    }
+
+    @Override
+    public Optional<Object> getEXPersist(String key) {
+        Object object;
+        try {
+            object = getRBucket(key).getAndClearExpire();
+        } catch (Exception e) {
+            object = getRBucket(key, getCodec()).getAndClearExpire();
+        }
+        return Optional.ofNullable(object);
     }
 
     @Override

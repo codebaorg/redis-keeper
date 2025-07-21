@@ -2008,6 +2008,36 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public Optional<Object> getEX(String key, long seconds) {
+        log("getEX", key, seconds);
+        return kString.getEX(key, seconds);
+    }
+
+    @Override
+    public Optional<Object> getPX(String key, long milliseconds) {
+        log("getPX", key, milliseconds);
+        return kString.getPX(key, milliseconds);
+    }
+
+    @Override
+    public Optional<Object> getEXAt(String key, long unixTimeSeconds) {
+        log("getEXAt", key, unixTimeSeconds);
+        return kString.getEXAt(key, unixTimeSeconds);
+    }
+
+    @Override
+    public Optional<Object> getPXAt(String key, long unixTimeMilliseconds) {
+        log("getPXAt", key, unixTimeMilliseconds);
+        return kString.getPXAt(key, unixTimeMilliseconds);
+    }
+
+    @Override
+    public Optional<Object> getEXPersist(String key) {
+        log("getEXPersist", key);
+        return kString.getEXPersist(key);
+    }
+
+    @Override
     public CompletableFuture<Object> getDelAsync(String key) {
         log("getDelAsync", key);
         return kString.getDelAsync(key);
