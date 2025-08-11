@@ -8,9 +8,9 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
+ * The type Caffeine specs properties.
  *
  * @author codeba
- *
  */
 @Data
 @ConfigurationProperties(prefix = "redis-keeper.cache.caffeine")
