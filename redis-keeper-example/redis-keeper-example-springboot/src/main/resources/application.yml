@@ -3,6 +3,13 @@ server:
 
 
 redis-keeper:
+  cache:
+    caffeine:
+      specs:
+        test_10s: initialCapacity=10,maximumSize=100,expireAfterWrite=PT10S
+        test_10m: initialCapacity=10,maximumSize=100,expireAfterWrite=PT10M
+
+
   redis:
     datasource:
       ds1:

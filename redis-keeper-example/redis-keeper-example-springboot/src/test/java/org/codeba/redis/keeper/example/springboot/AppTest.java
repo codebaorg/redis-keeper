@@ -20,12 +20,12 @@ import org.codeba.redis.keeper.core.CacheDatasourceStatus;
 import org.codeba.redis.keeper.core.CacheTemplate;
 import org.codeba.redis.keeper.core.CacheTemplateProvider;
 import org.codeba.redis.keeper.spring.CacheTemplateProxy;
+import org.codeba.redis.keeper.spring.LocalCacheManager;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.util.Collection;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * Unit test for simple ExampleApplication.
@@ -38,6 +38,9 @@ public class AppTest {
 
     @Autowired
     private CacheTemplateProvider<MyCacheTemplate> myProvider;
+
+    @Autowired
+    private LocalCacheManager localCacheManager;
 
     /**
      * Test.
@@ -268,6 +271,49 @@ public class AppTest {
                 template.del(key);
             }
         }
+
+    }
+
+    @Test
+    public void testCaffeineCacheManager() throws InterruptedException {
+        String cacheName = "test_10s";
+
+        String key = "myKey";
+        Object value = "bar";
+        localCacheManager.put(cacheName, key, value);
+
+        assert localCacheManager.getIfPresent(cacheName, key).equals(value);
+
+        final Map<Object, Object> map = localCacheManager.getAllPresent(cacheName, Collections.singleton(key));
+        assert map.get(key).equals(value);
+        assert null != localCacheManager.getNativeCache(cacheName);
+        Thread.sleep(10 * 1000);
+
+        assert null == localCacheManager.getIfPresent(cacheName, key);
+
+
+        String cacheName2 = "test_10m";
+        String key2 = "myKey2";
+        String key3 = "myKey3";
+        localCacheManager.put(cacheName2, key2, value);
+        localCacheManager.put(cacheName2, key3, value);
+
+        final Map<Object, Object> map2 = localCacheManager.getAllPresent(cacheName2, Arrays.asList(key2, key3));
+        assert map2.get(key2).equals(value);
+        assert map2.get(key3).equals(value);
+        localCacheManager.invalidateAll(cacheName2);
+        final Map<Object, Object> map3 = localCacheManager.getAllPresent(cacheName2, Arrays.asList(key2, key3));
+        assert map3.get(key2) == null;
+        assert map3.get(key3) == null;
+
+        localCacheManager.put(cacheName2, key2, value);
+        localCacheManager.put(cacheName2, key3, value);
+        localCacheManager.invalidate(cacheName2, key2);
+        assert localCacheManager.getIfPresent(cacheName2, key2) == null;
+        assert localCacheManager.getIfPresent(cacheName2, key3).equals(value);
+
+        localCacheManager.invalidateAll(cacheName2, Collections.singleton(key3));
+        assert localCacheManager.getIfPresent(cacheName2, key3) == null;
 
     }
 
