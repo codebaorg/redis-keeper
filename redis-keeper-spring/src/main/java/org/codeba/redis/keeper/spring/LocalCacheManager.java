@@ -6,6 +6,9 @@ import org.codeba.redis.keeper.core.LocalCache;
 
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import java.util.concurrent.ConcurrentMap;
+import java.util.function.Function;
 
 /**
  * The type Local cache manager.
@@ -37,15 +40,33 @@ public class LocalCacheManager implements LocalCache<Object, Object> {
     }
 
     @Override
+    public Object get(String name, Object key, Function<? super Object, ?> mappingFunction) {
+        final Cache<Object, Object> cache = getCacheByName(name);
+        return cache.get(key, mappingFunction);
+    }
+
+    @Override
     public Map<Object, Object> getAllPresent(String name, Iterable<?> keys) {
         final Cache<Object, Object> cache = getCacheByName(name);
         return cache.getAllPresent(keys);
     }
 
     @Override
+    public Map<Object, Object> getAll(String name, Iterable<?> keys, Function<? super Set<?>, ? extends Map<?, ?>> mappingFunction) {
+        final Cache<Object, Object> cache = getCacheByName(name);
+        return cache.getAll(keys, mappingFunction);
+    }
+
+    @Override
     public void put(String name, Object key, Object value) {
         final Cache<Object, Object> cache = getCacheByName(name);
         cache.put(key, value);
+    }
+
+    @Override
+    public void putAll(String name, Map<?, ?> map) {
+        final Cache<Object, Object> cache = getCacheByName(name);
+        cache.putAll(map);
     }
 
     @Override
@@ -57,13 +78,19 @@ public class LocalCacheManager implements LocalCache<Object, Object> {
     @Override
     public void invalidateAll(String name, Iterable<?> keys) {
         final Cache<Object, Object> cache = getCacheByName(name);
-        cache.invalidateAll();
+        cache.invalidateAll(keys);
     }
 
     @Override
     public void invalidateAll(String name) {
         final Cache<Object, Object> cache = getCacheByName(name);
         cache.invalidateAll();
+    }
+
+    @Override
+    public ConcurrentMap<Object, Object> asMap(String name) {
+        final Cache<Object, Object> cache = getCacheByName(name);
+        return cache.asMap();
     }
 
     private Cache<Object, Object> getCacheByName(String name) {
