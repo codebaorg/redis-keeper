@@ -115,8 +115,18 @@ class KRedissonZSetAsync extends BaseAsync implements KZSetAsync {
     }
 
     @Override
+    public CompletableFuture<Boolean> zAddAsync(String key, String member) {
+        return getRLexSortedSet(key).addAsync(member).toCompletableFuture();
+    }
+
+    @Override
     public CompletableFuture<Integer> zAddAsync(String key, Map<Object, Double> members) {
         return getRScoredSortedSet(key).addAllAsync(members).toCompletableFuture();
+    }
+
+    @Override
+    public CompletableFuture<Boolean> zAddAsync(String key, Collection<? extends String> members) {
+        return getRLexSortedSet(key).addAllAsync(members).toCompletableFuture();
     }
 
     @Override

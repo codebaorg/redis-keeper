@@ -89,6 +89,7 @@ public interface CacheDatasource<T> {
             // set CacheKeeperConfig
             configPostProcessor(v -> {
             }).accept(config);
+            configPostProcessor(config);
 
             // cacheTemplate Instantiation
             final String configString = config.toString();
@@ -132,6 +133,7 @@ public interface CacheDatasource<T> {
                         // set CacheKeeperConfig
                         configPostProcessor(v -> {
                         }).accept(config);
+                        configPostProcessor(config);
 
                         // cacheTemplate Instantiation
                         final String configString = config.toString();
@@ -170,6 +172,16 @@ public interface CacheDatasource<T> {
      */
     default Consumer<CacheKeeperConfig> configPostProcessor(Consumer<CacheKeeperConfig> consumer) {
         return consumer;
+    }
+
+    /**
+     * Config post processor cache keeper config.
+     *
+     * @param config the config
+     * @return the cache keeper config
+     */
+    default CacheKeeperConfig configPostProcessor(CacheKeeperConfig config) {
+        return config;
     }
 
     /**

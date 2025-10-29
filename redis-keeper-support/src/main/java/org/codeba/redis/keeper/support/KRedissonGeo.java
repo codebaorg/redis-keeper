@@ -22,7 +22,6 @@ import org.redisson.api.RGeo;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.geo.GeoSearchArgs;
 import org.redisson.api.geo.OptionalGeoSearch;
-import org.redisson.client.codec.Codec;
 
 import java.util.List;
 import java.util.Map;
@@ -35,21 +34,15 @@ class KRedissonGeo extends KRedissonGeoAsync implements KGeo {
      * The Redisson client.
      */
     private final RedissonClient redissonClient;
-    /**
-     * The Codec.
-     */
-    private final Codec codec;
 
     /**
      * Instantiates a new K redisson geo.
      *
      * @param redissonClient the redisson client
-     * @param codec          the codec
      */
-    public KRedissonGeo(RedissonClient redissonClient, Codec codec) {
-        super(redissonClient, codec);
+    public KRedissonGeo(RedissonClient redissonClient) {
+        super(redissonClient);
         this.redissonClient = redissonClient;
-        this.codec = codec;
     }
 
     @Override
@@ -187,7 +180,7 @@ class KRedissonGeo extends KRedissonGeoAsync implements KGeo {
      * @return the r geo
      */
     private <V> RGeo<V> getRGeo(String key) {
-        return redissonClient.getGeo(key, codec);
+        return redissonClient.getGeo(key);
     }
 
 }

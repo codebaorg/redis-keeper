@@ -37,6 +37,7 @@ import org.redisson.client.codec.StringCodec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
 import java.security.NoSuchAlgorithmException;
 import java.time.Duration;
 import java.util.Arrays;
@@ -148,19 +149,19 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
             log.error("org.codeba.redis.keeper.support.DefaultCacheDatasource.instantTemplate(CacheKeeperConfig config)--", e);
         }
 
-        this.kBitSet = new KRedissonBitSet(redissonClient);
         this.kMap = new KRedissonMap(redissonClient, StringCodec.INSTANCE);
-        this.kHyperLogLog = new KRedissonHyperLogLog(redissonClient, StringCodec.INSTANCE);
         this.kList = new KRedissonList(redissonClient, StringCodec.INSTANCE);
         this.kSet = new KRedissonSet(redissonClient, StringCodec.INSTANCE);
         this.kzSet = new KRedissonZSet(redissonClient, StringCodec.INSTANCE);
         this.kString = new KRedissonString(redissonClient, StringCodec.INSTANCE);
-        this.kBloomFilter = new KRedissonBloomFilter(redissonClient, StringCodec.INSTANCE);
+        this.kScript = new KRedissonScript(redissonClient, StringCodec.INSTANCE);
+        this.kBitSet = new KRedissonBitSet(redissonClient);
+        this.kHyperLogLog = new KRedissonHyperLogLog(redissonClient);
+        this.kBloomFilter = new KRedissonBloomFilter(redissonClient);
         this.kLock = new KRedissonLock(redissonClient);
         this.kRateLimiter = new KRedissonRateLimiter(redissonClient);
         this.kGeneric = new KRedissonGeneric(redissonClient);
-        this.kRedissonGeo = new KRedissonGeo(redissonClient, StringCodec.INSTANCE);
-        this.kScript = new KRedissonScript(redissonClient, StringCodec.INSTANCE);
+        this.kRedissonGeo = new KRedissonGeo(redissonClient);
     }
 
     /**
@@ -1450,9 +1451,21 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public boolean zAdd(String key, String member) {
+        log("zAdd", key, member);
+        return kzSet.zAdd(key, member);
+    }
+
+    @Override
     public CompletableFuture<Boolean> zAddAsync(String key, double score, Object member) {
         log("zAddAsync", key, score, member);
         return kzSet.zAddAsync(key, score, member);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> zAddAsync(String key, String member) {
+        log("zAddAsync", key, member);
+        return kzSet.zAddAsync(key, member);
     }
 
     @Override
@@ -1462,7 +1475,19 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public boolean zAdd(String key, Collection<? extends String> members) {
+        log("zAdd", key, members);
+        return kzSet.zAdd(key, members);
+    }
+
+    @Override
     public CompletableFuture<Integer> zAddAsync(String key, Map<Object, Double> members) {
+        log("zAddAsync", key, members);
+        return kzSet.zAddAsync(key, members);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> zAddAsync(String key, Collection<? extends String> members) {
         log("zAddAsync", key, members);
         return kzSet.zAddAsync(key, members);
     }
@@ -1726,6 +1751,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public Collection<String> zRangeByLEX(String key, int startIndex, int endIndex) {
+        log("zRangeByLEX", key, startIndex, endIndex);
+        return kzSet.zRangeByLEX(key, startIndex, endIndex);
+    }
+
+    @Override
     public CompletableFuture<Collection<Object>> zRangeAsync(String key, int startIndex, int endIndex) {
         log("zRangeAsync", key, startIndex, endIndex);
         return kzSet.zRangeAsync(key, startIndex, endIndex);
@@ -1735,6 +1766,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public Collection<Object> zRange(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive) {
         log("zRange", key, startScore, startScoreInclusive, endScore, endScoreInclusive);
         return kzSet.zRange(key, startScore, startScoreInclusive, endScore, endScoreInclusive);
+    }
+
+    @Override
+    public Collection<String> zRangeByLEX(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive) {
+        log("zRangeByLEX", key, from, startScoreInclusive, to, endScoreInclusive);
+        return kzSet.zRangeByLEX(key, from, startScoreInclusive, to, endScoreInclusive);
     }
 
     @Override
@@ -1750,6 +1787,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public Collection<String> zRangeByLEX(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive, int offset, int count) {
+        log("zRangeByLEX", key, from, startScoreInclusive, to, endScoreInclusive, offset, count);
+        return kzSet.zRangeByLEX(key, from, startScoreInclusive, to, endScoreInclusive, offset, count);
+    }
+
+    @Override
     public CompletableFuture<Collection<Object>> zRangeAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count) {
         log("zRangeAsync", key, startScore, startScoreInclusive, endScore, endScoreInclusive, offset, count);
         return kzSet.zRangeAsync(key, startScore, startScoreInclusive, endScore, endScoreInclusive, offset, count);
@@ -1759,6 +1802,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public Collection<Object> zRangeReversed(String key, int startIndex, int endIndex) {
         log("zRangeReversed", key, startIndex, endIndex);
         return kzSet.zRangeReversed(key, startIndex, endIndex);
+    }
+
+    @Override
+    public Collection<String> zRangeByLEXReversed(String key, String startIndex, String endIndex) {
+        log("zRangeByLEXReversed", key, startIndex, endIndex);
+        return kzSet.zRangeByLEXReversed(key, startIndex, endIndex);
     }
 
     @Override
@@ -1774,6 +1823,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public Collection<String> zRangeByLEXReversed(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive) {
+        log("zRangeByLEXReversed", key, from, startScoreInclusive, to, endScoreInclusive);
+        return kzSet.zRangeByLEXReversed(key, from, startScoreInclusive, to, endScoreInclusive);
+    }
+
+    @Override
     public CompletableFuture<Collection<Object>> zRangeReversedAsync(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive) {
         log("zRangeReversedAsync", key, startScore, startScoreInclusive, endScore, endScoreInclusive);
         return kzSet.zRangeReversedAsync(key, startScore, startScoreInclusive, endScore, endScoreInclusive);
@@ -1783,6 +1838,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count) {
         log("zRangeReversed", key, startScore, startScoreInclusive, endScore, endScoreInclusive, offset, count);
         return kzSet.zRangeReversed(key, startScore, startScoreInclusive, endScore, endScoreInclusive, offset, count);
+    }
+
+    @Override
+    public Collection<String> zRangeByLEXReversed(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive, int offset, int count) {
+        log("zRangeByLEXReversed", key, from, startScoreInclusive, to, endScoreInclusive, offset, count);
+        return kzSet.zRangeByLEXReversed(key, from, startScoreInclusive, to, endScoreInclusive, offset, count);
     }
 
     @Override
@@ -1981,6 +2042,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public Optional<Object> get(String key) {
         log("get", key);
         return kString.get(key);
+    }
+
+    @Override
+    public InputStream getBinary(String key) {
+        log("getBinary", key);
+        return kString.getBinary(key);
     }
 
     @Override

@@ -20,7 +20,6 @@ import org.codeba.redis.keeper.core.KHyperLogLogAsync;
 import org.redisson.api.RBatch;
 import org.redisson.api.RHyperLogLogAsync;
 import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.Codec;
 
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
@@ -33,20 +32,18 @@ class KRedissonHyperLogLogAsync extends BaseAsync implements KHyperLogLogAsync {
      * Instantiates a new K redisson hyper log log async.
      *
      * @param redissonClient the redisson client
-     * @param codec          the codec
      */
-    public KRedissonHyperLogLogAsync(RedissonClient redissonClient, Codec codec) {
-        super(redissonClient, codec);
+    public KRedissonHyperLogLogAsync(RedissonClient redissonClient) {
+        super(redissonClient);
     }
 
     /**
      * Instantiates a new K redisson hyper log log async.
      *
      * @param rBatch the r batch
-     * @param codec  the codec
      */
-    public KRedissonHyperLogLogAsync(RBatch rBatch, Codec codec) {
-        super(rBatch, codec);
+    public KRedissonHyperLogLogAsync(RBatch rBatch) {
+        super(rBatch);
     }
 
     @Override

@@ -110,11 +110,29 @@ public interface KZSetAsync {
     /**
      * Z add async completable future.
      *
+     * @param key    the key
+     * @param member the member
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> zAddAsync(String key, String member);
+
+    /**
+     * Z add async completable future.
+     *
      * @param key     the key
      * @param members the members
      * @return the completable future
      */
     CompletableFuture<Integer> zAddAsync(String key, Map<Object, Double> members);
+
+    /**
+     * Z add async completable future.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the completable future
+     */
+    CompletableFuture<Boolean> zAddAsync(String key, Collection<? extends String> members);
 
     /**
      * Z card async completable future.

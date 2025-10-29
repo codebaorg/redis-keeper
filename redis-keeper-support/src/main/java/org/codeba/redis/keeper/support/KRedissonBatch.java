@@ -63,7 +63,7 @@ public class KRedissonBatch implements KBatch {
 
     @Override
     public KGeoAsync getGeo() {
-        return new KRedissonGeoAsync(rBatch, StringCodec.INSTANCE);
+        return new KRedissonGeoAsync(rBatch);
     }
 
     @Override
@@ -73,7 +73,7 @@ public class KRedissonBatch implements KBatch {
 
     @Override
     public KHyperLogLogAsync getHyperLogLog() {
-        return new KRedissonHyperLogLogAsync(rBatch, StringCodec.INSTANCE);
+        return new KRedissonHyperLogLogAsync(rBatch);
     }
 
     @Override

@@ -59,6 +59,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Consumer;
 
 /**
  * Unit test for simple App.
@@ -77,7 +78,7 @@ public class AppTest extends TestCase {
     static {
         // todo please set your address and password
         String yourAddress = "redis://localhost:6379";
-        String yourPass = "youPass";
+        String yourPass = "yourPass";
         String properties = "redisKeeper:\n" +
                 "  redisson:\n" +
                 "    datasource:\n" +
@@ -134,8 +135,17 @@ public class AppTest extends TestCase {
             final CacheKeeperProperties fromYAML = CacheKeeperProperties.fromYAML(format);
             final CacheKeeperProperties.Redisson redisson = fromYAML.getRedisKeeper().getRedisson();
 
-            final DefaultCacheDatasource datasource = new DefaultCacheDatasource();
-            datasource.configPostProcessor(v -> v.getConfig().setCodec(new JsonJacksonCodec(getJacksonMapper())));
+            final CacheDatasource<CacheTemplate> datasource = new CacheDatasource<CacheTemplate>() {
+                @Override
+                public CacheTemplate instantTemplate(CacheKeeperConfig config) {
+                    return new DefaultRedissonTemplate(config);
+                }
+
+                @Override
+                public Consumer<CacheKeeperConfig> configPostProcessor(Consumer<CacheKeeperConfig> consumer) {
+                    return v -> v.getConfig().setCodec(new JsonJacksonCodec(getJacksonMapper()));
+                }
+            };
             final Map<String, CacheTemplate> dsMap = datasource.initialize(redisson.getDatasource());
             final Map<String, List<CacheTemplate>> dssMap = datasource.initializeMulti(redisson.getDatasources());
 
@@ -1144,6 +1154,16 @@ public class AppTest extends TestCase {
 
         CACHE_TEMPLATE.del(key);
 
+//        final List<String> list1 = Arrays.asList("Hello", "World");
+//        CACHE_TEMPLATE.hSet(key, "field1", list1);
+//
+//        final Collection<Object> objects3 = CACHE_TEMPLATE.hVALs(key);
+//        assertTrue(objects3.containsAll(list1));
+//
+//        final Collection<Object> objects4 = CACHE_TEMPLATE.hVALsAsync(key).join();
+//        assertTrue(objects4.containsAll(list1));
+//
+//        CACHE_TEMPLATE.del(key);
     }
 
     // list
@@ -3368,19 +3388,19 @@ public class AppTest extends TestCase {
     public void testZRemRangeByLex() {
         String key = "testZRemRangeByLex";
 
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "aaaa"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "b"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "c"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "d"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "e"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "aaaa"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "b"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "c"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "d"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "e"));
 
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "foo"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "zap"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "zip"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "ALPHA"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "alpha"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "foo"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "zap"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "zip"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "ALPHA"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "alpha"));
 
-        final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
+        final Collection<String> objects = CACHE_TEMPLATE.zRangeByLEX(key, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
         assertEquals("ALPHA", objects1.get(0));
         assertEquals("aaaa", objects1.get(1));
@@ -3396,7 +3416,7 @@ public class AppTest extends TestCase {
         final Optional<Integer> optional = CACHE_TEMPLATE.zRemRangeByLex(key, "alpha", true, "omega", true);
         assertEquals(6, optional.get().intValue());
 
-        final Collection<Object> objects2 = CACHE_TEMPLATE.zRange(key, 0, -1);
+        final Collection<String> objects2 = CACHE_TEMPLATE.zRangeByLEX(key, 0, -1);
         final ArrayList<Object> objects3 = new ArrayList<>(objects2);
         assertEquals("ALPHA", objects3.get(0));
         assertEquals("aaaa", objects3.get(1));
@@ -3412,19 +3432,19 @@ public class AppTest extends TestCase {
     public void testZRemRangeByLexAsync() {
         String key = "testZRemRangeByLexAsync";
 
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "aaaa"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "b"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "c"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "d"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "e"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "aaaa"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "b"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "c"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "d"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "e"));
 
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "foo"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "zap"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "zip"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "ALPHA"));
-        assertTrue(CACHE_TEMPLATE.zAdd(key, 0, "alpha"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "foo"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "zap"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "zip"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "ALPHA"));
+        assertTrue(CACHE_TEMPLATE.zAdd(key, "alpha"));
 
-        final Collection<Object> objects = CACHE_TEMPLATE.zRange(key, 0, -1);
+        final Collection<String> objects = CACHE_TEMPLATE.zRangeByLEX(key, 0, -1);
         final ArrayList<Object> objects1 = new ArrayList<>(objects);
         assertEquals("ALPHA", objects1.get(0));
         assertEquals("aaaa", objects1.get(1));
@@ -3440,7 +3460,7 @@ public class AppTest extends TestCase {
         final Integer optional = CACHE_TEMPLATE.zRemRangeByLexAsync(key, "alpha", true, "omega", true).join();
         assertEquals(6, optional.intValue());
 
-        final Collection<Object> objects2 = CACHE_TEMPLATE.zRange(key, 0, -1);
+        final Collection<String> objects2 = CACHE_TEMPLATE.zRangeByLEX(key, 0, -1);
         final ArrayList<Object> objects3 = new ArrayList<>(objects2);
         assertEquals("ALPHA", objects3.get(0));
         assertEquals("aaaa", objects3.get(1));
@@ -4206,9 +4226,9 @@ public class AppTest extends TestCase {
         CACHE_TEMPLATE.setObject(key6, 6.0F);
 
         assertEquals("Hello", CACHE_TEMPLATE.get(key1).get());
-        assertEquals("Hello", CACHE_TEMPLATE.getObject(key1).get());
+        assertEquals("Hello", CACHE_TEMPLATE.get(key1).get());
         assertEquals("Hello", CACHE_TEMPLATE.getAsync(key1).join());
-        assertEquals("Hello", CACHE_TEMPLATE.getObjectAsync(key1).join());
+        assertEquals("Hello", CACHE_TEMPLATE.getAsync(key1).join());
 
         assertEquals(1L, CACHE_TEMPLATE.getLong(key2));
         assertEquals(1L, Long.parseLong(CACHE_TEMPLATE.getObject(key2).get().toString()));

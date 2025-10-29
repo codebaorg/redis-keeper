@@ -18,7 +18,6 @@ package org.codeba.redis.keeper.support;
 
 import org.codeba.redis.keeper.core.KHyperLogLog;
 import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.Codec;
 
 import java.util.Collection;
 
@@ -31,21 +30,15 @@ class KRedissonHyperLogLog extends KRedissonHyperLogLogAsync implements KHyperLo
      * The Redisson client.
      */
     private final RedissonClient redissonClient;
-    /**
-     * The Codec.
-     */
-    private final Codec codec;
 
     /**
      * Instantiates a new K redisson hyper log log.
      *
      * @param redissonClient the redisson client
-     * @param codec          the codec
      */
-    public KRedissonHyperLogLog(RedissonClient redissonClient, Codec codec) {
-        super(redissonClient, codec);
+    public KRedissonHyperLogLog(RedissonClient redissonClient) {
+        super(redissonClient);
         this.redissonClient = redissonClient;
-        this.codec = codec;
     }
 
     @Override
@@ -76,7 +69,7 @@ class KRedissonHyperLogLog extends KRedissonHyperLogLogAsync implements KHyperLo
      * @return the hyper log log
      */
     private <V> org.redisson.api.RHyperLogLog<V> getHyperLogLog(String key) {
-        return redissonClient.getHyperLogLog(key, codec);
+        return redissonClient.getHyperLogLog(key);
     }
 
 }

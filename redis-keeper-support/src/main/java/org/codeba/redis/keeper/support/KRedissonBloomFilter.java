@@ -18,7 +18,6 @@ package org.codeba.redis.keeper.support;
 
 import org.codeba.redis.keeper.core.KBloomFilter;
 import org.redisson.api.RedissonClient;
-import org.redisson.client.codec.Codec;
 
 import java.util.concurrent.CompletableFuture;
 
@@ -30,10 +29,9 @@ class KRedissonBloomFilter extends BaseAsync implements KBloomFilter {
      * Instantiates a new K redisson bloom filter.
      *
      * @param redissonClient the redisson client
-     * @param codec          the codec
      */
-    public KRedissonBloomFilter(RedissonClient redissonClient, Codec codec) {
-        super(redissonClient, codec);
+    public KRedissonBloomFilter(RedissonClient redissonClient) {
+        super(redissonClient);
     }
 
     @Override

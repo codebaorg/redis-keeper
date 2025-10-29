@@ -26,6 +26,7 @@ import org.redisson.api.RedissonClient;
 import org.redisson.client.codec.Codec;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -70,17 +71,18 @@ class KRedissonString extends KRedissonStringAsync implements KString {
 
     @Override
     public Optional<Object> get(String key) {
-        return getObject(key);
+        final Object object = getRBucket(key, getCodec()).get();
+        return Optional.ofNullable(object);
+    }
+
+    @Override
+    public InputStream getBinary(String key) {
+        return getRBinaryStream(key).getInputStream();
     }
 
     @Override
     public Optional<Object> getObject(String key) {
-        Object object;
-        try {
-            object = getRBucket(key).get();
-        } catch (Exception e) {
-            object = getRBucket(key, getCodec()).get();
-        }
+        Object object = getRBucket(key).get();
         return Optional.ofNullable(object);
     }
 

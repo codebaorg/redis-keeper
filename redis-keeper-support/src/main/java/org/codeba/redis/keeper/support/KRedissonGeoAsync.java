@@ -26,7 +26,6 @@ import org.redisson.api.RGeoAsync;
 import org.redisson.api.RedissonClient;
 import org.redisson.api.geo.GeoSearchArgs;
 import org.redisson.api.geo.OptionalGeoSearch;
-import org.redisson.client.codec.Codec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -51,20 +50,18 @@ class KRedissonGeoAsync extends BaseAsync implements KGeoAsync {
      * Instantiates a new K redisson geo async.
      *
      * @param redissonClient the redisson client
-     * @param codec          the codec
      */
-    public KRedissonGeoAsync(RedissonClient redissonClient, Codec codec) {
-        super(redissonClient, codec);
+    public KRedissonGeoAsync(RedissonClient redissonClient) {
+        super(redissonClient);
     }
 
     /**
      * Instantiates a new K redisson geo async.
      *
      * @param rBatch the r batch
-     * @param codec  the codec
      */
-    public KRedissonGeoAsync(RBatch rBatch, Codec codec) {
-        super(rBatch, codec);
+    public KRedissonGeoAsync(RBatch rBatch) {
+        super(rBatch);
     }
 
     @Override

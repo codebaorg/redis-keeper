@@ -103,8 +103,18 @@ class KRedissonZSet extends KRedissonZSetAsync implements KZSet {
     }
 
     @Override
+    public boolean zAdd(String key, String member) {
+        return getRLexSortedSet(key).add(member);
+    }
+
+    @Override
     public int zAdd(String key, Map<Object, Double> members) {
         return getRScoredSortedSet(key).addAll(members);
+    }
+
+    @Override
+    public boolean zAdd(String key, Collection<? extends String> members) {
+        return getRLexSortedSet(key).addAll(members);
     }
 
     @Override
@@ -232,8 +242,18 @@ class KRedissonZSet extends KRedissonZSetAsync implements KZSet {
     }
 
     @Override
+    public Collection<String> zRangeByLEX(String key, int startIndex, int endIndex) {
+        return getRLexSortedSet(key).range(startIndex, endIndex);
+    }
+
+    @Override
     public Collection<Object> zRange(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive) {
         return getRScoredSortedSet(key).valueRange(startScore, startScoreInclusive, endScore, endScoreInclusive);
+    }
+
+    @Override
+    public Collection<String> zRangeByLEX(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive) {
+        return getRLexSortedSet(key).range(from, startScoreInclusive, to, endScoreInclusive);
     }
 
     @Override
@@ -242,9 +262,21 @@ class KRedissonZSet extends KRedissonZSetAsync implements KZSet {
     }
 
     @Override
+    public Collection<String> zRangeByLEX(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive, int offset, int count) {
+        return getRLexSortedSet(key).range(from, startScoreInclusive, to, endScoreInclusive);
+    }
+
+
+    @Override
     public Collection<Object> zRangeReversed(String key, int startIndex, int endIndex) {
         return getRScoredSortedSet(key).valueRangeReversed(startIndex, endIndex);
     }
+
+    @Override
+    public Collection<String> zRangeByLEXReversed(String key, String startIndex, String endIndex) {
+        return getRLexSortedSet(key).rangeReversed(startIndex, true, endIndex, true);
+    }
+
 
     @Override
     public Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive) {
@@ -252,8 +284,18 @@ class KRedissonZSet extends KRedissonZSetAsync implements KZSet {
     }
 
     @Override
+    public Collection<String> zRangeByLEXReversed(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive) {
+        return getRLexSortedSet(key).rangeReversed(from, startScoreInclusive, to, endScoreInclusive);
+    }
+
+    @Override
     public Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count) {
         return getRScoredSortedSet(key).valueRangeReversed(startScore, startScoreInclusive, endScore, endScoreInclusive, offset, count);
+    }
+
+    @Override
+    public Collection<String> zRangeByLEXReversed(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive, int offset, int count) {
+        return getRLexSortedSet(key).rangeReversed(from, startScoreInclusive, to, endScoreInclusive);
     }
 
     @Override

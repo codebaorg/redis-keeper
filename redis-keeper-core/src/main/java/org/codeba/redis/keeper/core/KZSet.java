@@ -109,6 +109,15 @@ public interface KZSet extends KZSetAsync {
     boolean zAdd(String key, double score, Object member);
 
     /**
+     * Z add boolean.
+     *
+     * @param key    the key
+     * @param member the member
+     * @return the boolean
+     */
+    boolean zAdd(String key, String member);
+
+    /**
      * Z add int.
      *
      * @param key     the key
@@ -116,6 +125,15 @@ public interface KZSet extends KZSetAsync {
      * @return the int
      */
     int zAdd(String key, Map<Object, Double> members);
+
+    /**
+     * Z add boolean.
+     *
+     * @param key     the key
+     * @param members the members
+     * @return the boolean
+     */
+    boolean zAdd(String key, Collection<? extends String> members);
 
     /**
      * Z card int.
@@ -327,6 +345,16 @@ public interface KZSet extends KZSetAsync {
     Collection<Object> zRange(String key, int startIndex, int endIndex);
 
     /**
+     * Z range by lex collection.
+     *
+     * @param key        the key
+     * @param startIndex the start index
+     * @param endIndex   the end index
+     * @return the collection
+     */
+    Collection<String> zRangeByLEX(String key, int startIndex, int endIndex);
+
+    /**
      * Z range collection.
      *
      * @param key                 the key
@@ -337,6 +365,19 @@ public interface KZSet extends KZSetAsync {
      * @return the collection
      */
     Collection<Object> zRange(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
+
+
+    /**
+     * Z range by lex collection.
+     *
+     * @param key                 the key
+     * @param from                the from
+     * @param startScoreInclusive the start score inclusive
+     * @param to                  the to
+     * @param endScoreInclusive   the end score inclusive
+     * @return the collection
+     */
+    Collection<String> zRangeByLEX(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive);
 
     /**
      * Z range collection.
@@ -353,6 +394,20 @@ public interface KZSet extends KZSetAsync {
     Collection<Object> zRange(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count);
 
     /**
+     * Z range by lex collection.
+     *
+     * @param key                 the key
+     * @param from                the from
+     * @param startScoreInclusive the start score inclusive
+     * @param to                  the to
+     * @param endScoreInclusive   the end score inclusive
+     * @param offset              the offset
+     * @param count               the count
+     * @return the collection
+     */
+    Collection<String> zRangeByLEX(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive, int offset, int count);
+
+    /**
      * Z range reversed collection.
      *
      * @param key        the key
@@ -361,6 +416,17 @@ public interface KZSet extends KZSetAsync {
      * @return the collection
      */
     Collection<Object> zRangeReversed(String key, int startIndex, int endIndex);
+
+
+    /**
+     * Z range by lex reversed collection.
+     *
+     * @param key  the key
+     * @param from the from
+     * @param to   the to
+     * @return the collection
+     */
+    Collection<String> zRangeByLEXReversed(String key, String from, String to);
 
     /**
      * Z range reversed collection.
@@ -373,6 +439,19 @@ public interface KZSet extends KZSetAsync {
      * @return the collection
      */
     Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive);
+
+
+    /**
+     * Z range by lex reversed collection.
+     *
+     * @param key                 the key
+     * @param from                the from
+     * @param startScoreInclusive the start score inclusive
+     * @param to                  the to
+     * @param endScoreInclusive   the end score inclusive
+     * @return the collection
+     */
+    Collection<String> zRangeByLEXReversed(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive);
 
     /**
      * Z range reversed collection.
@@ -387,6 +466,21 @@ public interface KZSet extends KZSetAsync {
      * @return the collection
      */
     Collection<Object> zRangeReversed(String key, double startScore, boolean startScoreInclusive, double endScore, boolean endScoreInclusive, int offset, int count);
+
+
+    /**
+     * Z range by lex reversed collection.
+     *
+     * @param key                 the key
+     * @param from                the from
+     * @param startScoreInclusive the start score inclusive
+     * @param to                  the to
+     * @param endScoreInclusive   the end score inclusive
+     * @param offset              the offset
+     * @param count               the count
+     * @return the collection
+     */
+    Collection<String> zRangeByLEXReversed(String key, String from, boolean startScoreInclusive, String to, boolean endScoreInclusive, int offset, int count);
 
     /**
      * Z rank optional.

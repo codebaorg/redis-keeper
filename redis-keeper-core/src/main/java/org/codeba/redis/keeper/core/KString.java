@@ -16,6 +16,7 @@
 
 package org.codeba.redis.keeper.core;
 
+import java.io.InputStream;
 import java.time.Duration;
 import java.util.Map;
 import java.util.Optional;
@@ -57,6 +58,14 @@ public interface KString extends KStringAsync {
      * @return the optional
      */
     Optional<Object> get(String key);
+
+    /**
+     * Gets binary.
+     *
+     * @param key the key
+     * @return the binary
+     */
+    InputStream getBinary(String key);
 
     /**
      * Gets object.
