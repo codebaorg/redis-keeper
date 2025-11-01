@@ -174,6 +174,26 @@ public interface KStringAsync {
 
 
     /**
+     * Sets nx async.
+     *
+     * @param key   the key
+     * @param value the value
+     * @return the nx async
+     */
+    CompletableFuture<Boolean> setNXAsync(String key, Object value);
+
+
+    /**
+     * Sets nx async.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     * @return the nx async
+     */
+    CompletableFuture<Boolean> setNXAsync(String key, Object value, Duration duration);
+
+    /**
      * Compare and set async completable future.
      *
      * @param key    the key

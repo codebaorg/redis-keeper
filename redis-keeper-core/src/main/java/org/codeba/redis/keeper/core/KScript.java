@@ -34,4 +34,52 @@ public interface KScript extends KScriptAsync {
      * @throws NoSuchAlgorithmException the no such algorithm exception
      */
     Optional<Object> executeScript(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException;
+
+    /**
+     * Execute script optional.
+     *
+     * @param returnType the return type
+     * @param script     the script
+     * @param keys       the keys
+     * @param values     the values
+     * @return the optional
+     * @throws NoSuchAlgorithmException the no such algorithm exception
+     */
+    Optional<Object> executeScript(ReturnType returnType, String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException;
+
+    /**
+     * The enum Return type.
+     */
+    enum ReturnType {
+        /**
+         * Boolean return type.
+         */
+        BOOLEAN,
+        /**
+         * Integer return type.
+         */
+        INTEGER,
+        /**
+         * Multi return type.
+         */
+        MULTI,
+        /**
+         * Status return type.
+         */
+        STATUS,
+        /**
+         * Value return type.
+         */
+        VALUE,
+        /**
+         * Mapvalue return type.
+         */
+//        MAPVALUE,
+        /**
+         * Mapvaluelist return type.
+         */
+        MAPVALUELIST;
+    }
+
+
 }

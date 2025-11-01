@@ -192,6 +192,23 @@ public interface KString extends KStringAsync {
     void setEX(String key, String value, Duration duration);
 
     /**
+     * Sets ex.
+     *
+     * @param key   the key
+     * @param value the value
+     */
+    boolean setNX(String key, Object value);
+
+    /**
+     * Sets ex.
+     *
+     * @param key      the key
+     * @param value    the value
+     * @param duration the duration
+     */
+    boolean setNX(String key, Object value, Duration duration);
+
+    /**
      * Set.
      *
      * @param key   the key

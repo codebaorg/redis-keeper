@@ -2261,6 +2261,18 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public CompletableFuture<Boolean> setNXAsync(String key, Object value) {
+        log("setNXAsync", key, value);
+        return kString.setNXAsync(key, value);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> setNXAsync(String key, Object value, Duration duration) {
+        log("setNXAsync", key, value, duration);
+        return kString.setNXAsync(key, value, duration);
+    }
+
+    @Override
     public boolean compareAndSet(String key, String expect, String update) {
         log("compareAndSet", key, expect, update);
         return kString.compareAndSet(key, expect, update);
@@ -2276,6 +2288,18 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public void setEX(String key, String value, Duration duration) {
         log("setEX", key, value, duration);
         kString.setEX(key, value, duration);
+    }
+
+    @Override
+    public boolean setNX(String key, Object value) {
+        log("setNX", key, value);
+        return kString.setNX(key, value);
+    }
+
+    @Override
+    public boolean setNX(String key, Object value, Duration duration) {
+        log("setNX", key, value, duration);
+        return kString.setNX(key, value, duration);
     }
 
     @Override
@@ -2345,9 +2369,63 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public void lock(String key, long leaseTime, TimeUnit unit) {
+        log("lock", key, leaseTime, unit);
+        kLock.lock(key, leaseTime, unit);
+    }
+
+    @Override
     public CompletableFuture<Boolean> tryLockAsync(String key, long waitTime, long leaseTime, TimeUnit unit) {
         log("tryLockAsync", key, waitTime, leaseTime, unit);
         return kLock.tryLockAsync(key, waitTime, leaseTime, unit);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> tryLockAsync(String key, long waitTime, long leaseTime, TimeUnit unit, long threadId) {
+        log("tryLockAsync", key, waitTime, leaseTime, unit, threadId);
+        return kLock.tryLockAsync(key, waitTime, leaseTime, unit, threadId);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> isHeldByThreadAsync(String key, long threadId) {
+        log("isHeldByThreadAsync", key, threadId);
+        return kLock.isHeldByThreadAsync(key, threadId);
+    }
+
+    @Override
+    public CompletableFuture<Integer> getHoldCountAsync(String key) {
+        log("getHoldCountAsync", key);
+        return kLock.getHoldCountAsync(key);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> isLockedAsync(String key) {
+        log("isLockedAsync", key);
+        return kLock.isLockedAsync(key);
+    }
+
+    @Override
+    public CompletableFuture<Long> remainTimeToLiveAsync(String key) {
+        log("remainTimeToLiveAsync", key);
+        return kLock.remainTimeToLiveAsync(key);
+    }
+
+    @Override
+    public void lock(String key) {
+        log("lock", key);
+        kLock.lock(key);
+    }
+
+    @Override
+    public void lockInterruptibly(String key) throws InterruptedException {
+        log("lockInterruptibly", key);
+        kLock.lockInterruptibly(key);
+    }
+
+    @Override
+    public boolean tryLock(String key) {
+        log("tryLock", key);
+        return kLock.tryLock(key);
     }
 
     @Override
@@ -2369,6 +2447,12 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public void lockInterruptibly(String key, long leaseTime, TimeUnit unit) throws InterruptedException {
+        log("lockInterruptibly", key, leaseTime, unit);
+        kLock.lockInterruptibly(key, leaseTime, unit);
+    }
+
+    @Override
     public CompletableFuture<Void> unlockAsync(String key) {
         log("unlockAsync", key);
         return kLock.unlockAsync(key);
@@ -2381,9 +2465,75 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     }
 
     @Override
+    public CompletableFuture<Boolean> tryLockAsync(String key) {
+        log("tryLockAsync", key);
+        return kLock.tryLockAsync(key);
+    }
+
+    @Override
+    public CompletableFuture<Void> lockAsync(String key) {
+        log("lockAsync", key);
+        return kLock.lockAsync(key);
+    }
+
+    @Override
+    public CompletableFuture<Void> lockAsync(String key, long threadId) {
+        log("lockAsync", key, threadId);
+        return kLock.lockAsync(key, threadId);
+    }
+
+    @Override
+    public CompletableFuture<Void> lockAsync(String key, long leaseTime, TimeUnit unit) {
+        log("lockAsync", key, leaseTime, unit);
+        return kLock.lockAsync(key, leaseTime, unit);
+    }
+
+    @Override
+    public CompletableFuture<Void> lockAsync(String key, long leaseTime, TimeUnit unit, long threadId) {
+        log("lockAsync", key, leaseTime, unit, threadId);
+        return kLock.lockAsync(key, leaseTime, unit, threadId);
+    }
+
+    @Override
+    public CompletableFuture<Boolean> tryLockAsync(String key, long threadId) {
+        log("tryLockAsync", key, threadId);
+        return kLock.tryLockAsync(key, threadId);
+    }
+
+    @Override
     public boolean forceUnlock(String key) {
         log("forceUnlock", key);
         return kLock.forceUnlock(key);
+    }
+
+    @Override
+    public boolean isLocked(String key) {
+        log("isLocked", key);
+        return kLock.isLocked(key);
+    }
+
+    @Override
+    public boolean isHeldByThread(String key, long threadId) {
+        log("isHeldByThread", key, threadId);
+        return kLock.isHeldByThread(key, threadId);
+    }
+
+    @Override
+    public boolean isHeldByCurrentThread(String key) {
+        log("isHeldByCurrentThread", key);
+        return kLock.isHeldByCurrentThread(key);
+    }
+
+    @Override
+    public int getHoldCount(String key) {
+        log("getHoldCount", key);
+        return kLock.getHoldCount(key);
+    }
+
+    @Override
+    public long remainTimeToLive(String key) {
+        log("remainTimeToLive", key);
+        return kLock.remainTimeToLive(key);
     }
 
     @Override
@@ -2396,6 +2546,11 @@ public class DefaultRedissonTemplate implements RedissonTemplate, CacheTemplate 
     public Optional<Object> executeScript(String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
         log("executeScript", script, keys, values);
         return kScript.executeScript(script, keys, values);
+    }
+
+    @Override
+    public Optional<Object> executeScript(ReturnType returnType, String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
+        return kScript.executeScript(returnType, script, keys, values);
     }
 
     @Override

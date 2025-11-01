@@ -172,6 +172,30 @@ class KRedissonStringAsync extends BaseAsync implements KStringAsync {
     }
 
     @Override
+    public CompletableFuture<Boolean> setNXAsync(String key, Object value) {
+        final RBucketAsync<Object> rBucket = getRBucket(key, getCodec());
+        if (value instanceof String || value instanceof Integer || value instanceof Long
+                || value instanceof Float || value instanceof Double) {
+            return rBucket.trySetAsync(value.toString()).toCompletableFuture();
+        } else {
+            return getRBucket(key).trySetAsync(value).toCompletableFuture();
+        }
+    }
+
+    @Override
+    public CompletableFuture<Boolean> setNXAsync(String key, Object value, Duration duration) {
+        final RBucketAsync<Object> rBucket = getRBucket(key, getCodec());
+        if (value instanceof String || value instanceof Integer || value instanceof Long
+                || value instanceof Float || value instanceof Double) {
+            return rBucket.trySetAsync(value.toString(), duration.toMillis(), TimeUnit.MILLISECONDS)
+                    .toCompletableFuture();
+        } else {
+            return getRBucket(key).trySetAsync(value, duration.toMillis(), TimeUnit.MILLISECONDS)
+                    .toCompletableFuture();
+        }
+    }
+
+    @Override
     public CompletableFuture<Boolean> compareAndSetAsync(String key, String expect, String update) {
         return getRBucket(key, getCodec()).compareAndSetAsync(expect, update).toCompletableFuture();
     }

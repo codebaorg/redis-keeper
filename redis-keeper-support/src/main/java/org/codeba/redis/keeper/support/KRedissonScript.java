@@ -52,6 +52,45 @@ class KRedissonScript extends KRedissonScriptAsync implements KScript {
         }
     }
 
+    @Override
+    public Optional<Object> executeScript(ReturnType returnType, String script, List<Object> keys, Object... values) throws NoSuchAlgorithmException {
+        final RScript rScript = getRScript();
+        String shaDigests = sha1DigestAsHex(script);
+        final RScript.ReturnType convertReturnType = convertReturnType(returnType);
+        try {
+            return Optional.ofNullable(rScript.evalSha(RScript.Mode.READ_WRITE, shaDigests, convertReturnType, keys, values));
+        } catch (RedisException e) {
+            return Optional.ofNullable(rScript.eval(RScript.Mode.READ_WRITE, script, convertReturnType, keys, values));
+        }
+    }
+
+    /**
+     * Convert return type r script . return type.
+     *
+     * @param returnType the return type
+     * @return the r script . return type
+     */
+    private RScript.ReturnType convertReturnType(ReturnType returnType) {
+        switch (returnType) {
+            case BOOLEAN:
+                return RScript.ReturnType.BOOLEAN;
+            case INTEGER:
+                return RScript.ReturnType.INTEGER;
+            case MULTI:
+                return RScript.ReturnType.MULTI;
+            case STATUS:
+                return RScript.ReturnType.STATUS;
+            case VALUE:
+                return RScript.ReturnType.VALUE;
+//            case MAPVALUE:
+//                return RScript.ReturnType.MAPVALUE;
+            case MAPVALUELIST:
+                return RScript.ReturnType.MAPVALUELIST;
+            default:
+                return RScript.ReturnType.VALUE;
+        }
+    }
+
     /**
      * Gets r script.
      *

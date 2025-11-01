@@ -50,7 +50,7 @@ class KRedissonGeneric extends KRedissonGenericAsync implements KGeneric {
 
     @Override
     public boolean expireAt(String key, long timestamp) {
-        return getRKeys().expireAt(key, timestamp);
+        return getRKeys().expireAt(key, timestamp * 1000);
     }
 
     @Override

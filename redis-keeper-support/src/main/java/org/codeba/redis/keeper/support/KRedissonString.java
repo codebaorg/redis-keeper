@@ -215,6 +215,28 @@ class KRedissonString extends KRedissonStringAsync implements KString {
     }
 
     @Override
+    public boolean setNX(String key, Object value) {
+        final RBucket<Object> rBucket = getRBucket(key, getCodec());
+        if (value instanceof String || value instanceof Integer || value instanceof Long
+                || value instanceof Float || value instanceof Double) {
+            return rBucket.trySet(value.toString());
+        } else {
+            return getRBucket(key).trySet(value);
+        }
+    }
+
+    @Override
+    public boolean setNX(String key, Object value, Duration duration) {
+        final RBucket<Object> rBucket = getRBucket(key, getCodec());
+        if (value instanceof String || value instanceof Integer || value instanceof Long
+                || value instanceof Float || value instanceof Double) {
+            return rBucket.trySet(value.toString(), duration.toMillis(), TimeUnit.MILLISECONDS);
+        } else {
+            return getRBucket(key).trySet(value, duration.toMillis(), TimeUnit.MILLISECONDS);
+        }
+    }
+
+    @Override
     public long strLen(String key) {
         return getRBucket(key, getCodec()).size();
     }

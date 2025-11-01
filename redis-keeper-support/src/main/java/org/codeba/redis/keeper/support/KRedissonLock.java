@@ -20,13 +20,12 @@ import org.codeba.redis.keeper.core.KLock;
 import org.redisson.api.RLock;
 import org.redisson.api.RedissonClient;
 
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
 
 /**
  * The type K redisson lock.
  */
-class KRedissonLock extends BaseAsync implements KLock {
+class KRedissonLock extends KRedissonLockAsync implements KLock {
     /**
      * Instantiates a new K redisson lock.
      *
@@ -42,8 +41,23 @@ class KRedissonLock extends BaseAsync implements KLock {
     }
 
     @Override
-    public CompletableFuture<Boolean> tryLockAsync(String key, long waitTime, long leaseTime, TimeUnit unit) {
-        return getRLock(key).tryLockAsync(waitTime, leaseTime, unit).toCompletableFuture();
+    public void lock(String key, long leaseTime, TimeUnit unit) {
+        getRLock(key).lock(leaseTime, unit);
+    }
+
+    @Override
+    public void lock(String key) {
+        getRLock(key).lock();
+    }
+
+    @Override
+    public void lockInterruptibly(String key) throws InterruptedException {
+        getRLock(key).lockInterruptibly();
+    }
+
+    @Override
+    public boolean tryLock(String key) {
+        return getRLock(key).tryLock();
     }
 
     @Override
@@ -52,23 +66,13 @@ class KRedissonLock extends BaseAsync implements KLock {
     }
 
     @Override
-    public CompletableFuture<Boolean> tryLockAsync(String key, long waitTime, TimeUnit unit) {
-        return getRLock(key).tryLockAsync(waitTime, unit).toCompletableFuture();
-    }
-
-    @Override
     public void unlock(String key) {
         getRLock(key).unlock();
     }
 
     @Override
-    public CompletableFuture<Void> unlockAsync(String key) {
-        return getRLock(key).unlockAsync().toCompletableFuture();
-    }
-
-    @Override
-    public CompletableFuture<Void> unlockAsync(String key, long threadId) {
-        return getRLock(key).unlockAsync(threadId).toCompletableFuture();
+    public void lockInterruptibly(String key, long leaseTime, TimeUnit unit) throws InterruptedException {
+        getRLock(key).lockInterruptibly(leaseTime, unit);
     }
 
     @Override
@@ -77,8 +81,28 @@ class KRedissonLock extends BaseAsync implements KLock {
     }
 
     @Override
-    public CompletableFuture<Boolean> forceUnlockAsync(String key) {
-        return getRLock(key).forceUnlockAsync().toCompletableFuture();
+    public boolean isLocked(String key) {
+        return getRLock(key).isLocked();
+    }
+
+    @Override
+    public boolean isHeldByThread(String key, long threadId) {
+        return getRLock(key).isHeldByThread(threadId);
+    }
+
+    @Override
+    public boolean isHeldByCurrentThread(String key) {
+        return getRLock(key).isHeldByCurrentThread();
+    }
+
+    @Override
+    public int getHoldCount(String key) {
+        return getRLock(key).getHoldCount();
+    }
+
+    @Override
+    public long remainTimeToLive(String key) {
+        return getRLock(key).remainTimeToLive();
     }
 
     /**
