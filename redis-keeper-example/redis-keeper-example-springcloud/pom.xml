@@ -56,7 +56,7 @@
         <dependency>
             <groupId>org.codeba</groupId>
             <artifactId>redis-keeper-spring-boot-starter</artifactId>
-            <version>2025.2.0</version>
+            <version>2025.2.1</version>
         </dependency>
 
         <dependency>

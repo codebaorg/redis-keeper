@@ -20,7 +20,7 @@
     <parent>
         <groupId>org.codeba</groupId>
         <artifactId>redis-keeper</artifactId>
-        <version>2025.2.0</version>
+        <version>2025.2.1</version>
     </parent>
 
     <artifactId>redis-keeper-support</artifactId>
@@ -86,6 +86,14 @@
                     </execution>
                 </executions>
             </plugin>
+            <!--            <plugin>-->
+            <!--                <groupId>org.apache.maven.plugins</groupId>-->
+            <!--                <artifactId>maven-compiler-plugin</artifactId>-->
+            <!--                <configuration>-->
+            <!--                    <source>9</source>-->
+            <!--                    <target>9</target>-->
+            <!--                </configuration>-->
+            <!--            </plugin>-->
         </plugins>
     </build>
 
